@@ -12,9 +12,12 @@ def solve_ising(B, bias):
     mdl = Model()
     n = B.shape[0]
     x = {i: mdl.binary_var(name='x_{0}'.format(i)) for i in range(n)}
+    
+    # objective function
     couplers_func =  mdl.sum(2 * B[i,j] * (2 * x[i] - 1) * (2 * x[j] - 1) for i in range(n - 1) for j in range(i, n)) 
     bias_func = mdl.sum(float(bias[i]) * x[i] for i in range(n))
     ising_func = couplers_func + bias_func
+
     mdl.minimize(ising_func)
     solution = mdl.solve()
     cplex_solution = solution.get_all_values()
