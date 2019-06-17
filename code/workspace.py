@@ -1,29 +1,46 @@
 import utility as uti
 import numpy as np
 import networkx as nx
+import math
 import random
 from collections import defaultdict
+from docplex.mp.constants import ComparisonType
+from docplex.mp.model import Model
 
-#----------------------------------------Example graphs---------------------------------------
+# -----------------------------------------
+#              Two parameters             -
+# -----------------------------------------
+d_replace = 20 # constant for replacing missing edges in g2
+beta = 50  # constant for constraint
+
+#-------------------------------------------
+#              EXAMPLE GRAPHS             -
+#-------------------------------------------
 g1 = uti.construct_random_graph("barabasi_c")
 
-#--------------------------------Construct the ground truth mapping----------------------------
+# ------------------------------------------------------------
+#             CONSTRUCT THE GROUND TRUTH MAPPING             -
+# ------------------------------------------------------------
 
 g1_node_list = np.asarray(g1.nodes()) # list of node ids, starts from 0
 g2_node_list = np.random.permutation(g1_node_list) # random permutation of the list of node id
 
+
 # Construct the ground truth mapping
 gt_mapping = dict()
 for i in range(len(g1_node_list)):
-    gt_mapping[g1_node_list[i]] = g2_node_list[i]
+        gt_mapping[g1_node_list[i]] = g2_node_list[i]
 
 # relabel the graph
 g2 = nx.relabel_nodes(g1, gt_mapping)
 
-#-----------------------------------Initial solution--------------------------------------------
+# ----------------------------------------------------------------------
+#                        INITIAL SOLUTION                              -
+# ----------------------------------------------------------------------
 
 # initial Permutation matrix
 pi = uti.initial_solution(g1, g2, g1_node_list, 0.2) # the last parameter is the pertubation probability
+
 
 # initial mapping, format (dict): {vertex in g1 : vertx in g2}
 mapping = dict()
@@ -32,13 +49,16 @@ for i in range(len(g1)):
         if pi[i, j] == 1:
             mapping[i] = j
 
+# Compute the initial mapping percentage
 matched_node = 0
 for i in range(len(g1)):
     if gt_mapping[i] == mapping[i]:
         matched_node += 1
 print("Initial mapping percentage: {}".format(matched_node / len(g1))) #0.6333333333333333
 
-#----------------------------------------Initial Objective----------------------------------------------
+# ------------------------------------------------------------------------------
+#                             INITIAL OBJECTIVE                                -
+# ------------------------------------------------------------------------------
 
 # Cost matrix and Distance matrix
 C = nx.to_numpy_matrix(g1, dtype = np.int8)
@@ -48,9 +68,9 @@ D = nx.to_numpy_matrix(g2, g1_node_list, dtype = np.int8) # the rows and columns
 for i in range(len(g2)):
     for j in range(len(g2)):
         if D[i, j] == 0:
-            D[i, j] = 2
+            D[i, j] = d_replace # could be the reason?
 
-# initial objective
+# initial objective value
 objective = 0
 for i1 in range(len(g1)):
     for j1 in range(len(g1)):
@@ -60,58 +80,246 @@ for i1 in range(len(g1)):
 
 print("The initial objective value: {}".format(objective))
 
-#----------------------------------------Refinement--------------------------------------------
-max_iter = 200
-for z in range(max_iter):
-    # random sample 30 nodes from the graph
-    V_1 = []
-    for _ in range(30):
-        rand = random.uniform(0, len(g1))
-        V_1.append(g1_node_list[int(rand)])
-    
-    for i1 in range(len(V_1)-1):
-        u1 = V_1[i1]
+# --------------------------------------------------------------------------------
+#                              BASELINE REFINEMENT                               -
+# --------------------------------------------------------------------------------
 
-        # we don't include vertices in V_1 in the neighborhood
-        n1 = set(g1.neighbors(u1))
-        n1 = list(n1 - set(V_1))
+# mapping, pi = uti.pairwise_refine(g1, g1_node_list, pi, mapping, C, D, objective, 200)
 
-        for j1 in range(i1 + 1):
-            v1 = V_1[j1]
-            u2 = mapping[u1]
-            v2 = mapping[v1]
-            old_part_1 = C[u1, v1] * D[u2, v2]
-            new_part_1 = C[u1, v1] * D[v2, u2]
+# matched_node = 0
+# for i in range(len(g1)):
+#     if gt_mapping[i] == mapping[i]:
+#         matched_node += 1
+# print("Final mapping percentage: {}".format(matched_node / len(g1))) # 0.9333333333333333
 
-            new_part_2 = 0
-            for n in n1:
-                new_part_2 += C[u1, n] * D[v2, mapping[n]]
-            old_part_2 = 0
-            for n in n1:
-                old_part_2 += C[u1, n] * D[u2, mapping[n]]
+# ----------------------------------------------------
+#                        QUBO                        -
+#-----------------------------------------------------
 
-            n2 = set(g1.neighbors(v1))
-            n2 = list(n2 - set(V_1))
+# random sample n nodes from the graph
+V_1 = []
+n = 5 # sample size
+for _ in range(n):
+	rand = random.uniform(0, len(g1))
+	V_1.append(g1_node_list[int(rand)])
 
-            new_part_3 = 0
-            for n in n2:
-                new_part_3 += C[v1, n] * D[u2, mapping[n]]
-            old_part_3 = 0
-            for n in n2:
-                old_part_3 += C[v1, n] * D[v2, mapping[n]]
-            
-            if (new_part_1 + new_part_2 + new_part_3) < (old_part_1 + old_part_2 + old_part_3):
-                objective = objective - (old_part_1 + old_part_2 + old_part_3) + (new_part_1 + new_part_2 + new_part_3)
-                mapping[u1] = v2
-                mapping[v1] = u2
-                pi[u1, u2] = 0
-                pi[u1, v2] = 1
-                pi[v1, v2] = 0
-                pi[v1, u2] = 1
+# construct the corresponding mapped nodes in g2
+V_2 = []
+for i in V_1:
+	V_2.append(mapping[i])
 
+#---------------------------------QUBO: Construct matrix H (Beginning) -----------------------------
+
+# M_1 = \beta \times I_{n_1 \times n_1} \otimes Oi(I_{n_2 \times n_2} ), here n_1 = n_2 = n
+M_1 = beta * np.kron(
+	np.identity(n, np.int8), 
+	uti.Oi(np.identity(n, np.int8))
+	)  
+
+# M_2 = \beta \times Oi(I_{n_1 \times n_1}) \otimes I_{n_2 \times n_2}, here n_1 = n_2 = n
+M_2 = beta * np.kron(
+	uti.Oi(np.identity(n, np.int8)),
+	np.identity(n, np.int8)
+	)
+
+# M_3 = -2\beta \times I_{n_1n_2 \times n_1n_2}
+M_3 =  -2 * beta * np.identity(n**2)
+
+# Extract submatrix of C for which only contains the selected nodes in V_1
+partial_C = np.zeros((n, n), np.int8)
+
+"""
+We have a list of selected vertices, V_1. Each vertex is labeled with a numeric id. At the same time,
+the adjacency matrix C is constructed in such a way that vertex with id i corresponds to the ith row/column
+of C. 
+We use V_1 as a mapping from vertex id to entries in partial_C. For example, partial_C[3, 4] corresponds to
+the flow between vertices V_1[3] and V_1[4]
+"""
+for i in range(n):
+	for j in range(n):
+		partial_C[i, j] = C[V_1[i], V_1[j]]
+
+
+# Extract submatrix for D for which only contains the selected nodes in V_2
+partial_D = np.zeros((n, n), np.int8)
+
+"""
+We have a list of selected vertices, V_2. Each vertex is labeled with a numeric id. At the same time,
+the adjacency matrix D is constructed in such a way that vertex with id i corresponds to the ith row/column
+of D.
+We use V_1 as a mapping from vertex id to entries in partial_C. For example, partial_D[3, 4] corresponds to
+the flow between vertices V_2[3] and V_2[4] 
+"""
+
+for i in range(n):
+	for j in range(n):
+		partial_D[i, j] = D[V_2[i], V_2[j]]
+
+
+# Finally, matrix H
+H = np.kron(partial_C, partial_D) + M_1 + M_2 + M_3
+
+#---------------------------------QUBO: Construct matrix H (Ending) -----------------------------
+
+#------------------------------QUBO: Construct bias vector J (beginning)-------------------------
+
+J = [0] * n**2
+
+for i1 in range(n):
+	i = V_1[i1]
+	nei = set(g1.neighbors(i))
+	nei = list(nei - set(V_1))
+	for i2 in range(n):
+		u = V_2[i2]
+		s = 0
+		for k in nei:
+			psi_k = mapping[k]
+			s += C[i, k] + D[u, psi_k]
+		index = n * (i1) + i2 # Here we use i1 insteand of i1 - 1 because list are zero indexed
+		J[index] = s
+
+
+
+#------------------------------QUBO: Construct bias vector J (ending)-------------------------
+
+
+# ---------------------------------------------------------------------------------
+#                       PROPOSED REFINEMENT - SINGLE TRAIL                        -
+# ---------------------------------------------------------------------------------
+
+# The result of the subproblem of size n 
+result = uti.solve_ising(H, J) #RESULTS ARE FLOATS!!!!!
+
+# Extract the index and upate the mapping
+for r in range(len(result)):
+	if result[r] == 1.0:
+		i = V_1[math.floor(r / n)]
+		u = V_2[r % n]
+		# Swapping are closed under V_1 nad V_2
+		mapping[i] = u
+
+# ---------------------------------------------------------------------------------
+#                       PROPOSED REFINEMENT - ITERATIVE                           -
+# ---------------------------------------------------------------------------------
+
+
+max_iter = 300
+for _ in range(max_iter):
+	# random sample n nodes from the graph
+	V_1 = []
+	n = 8 # sample size
+	for _ in range(n):
+		rand = random.uniform(0, len(g1))
+		V_1.append(g1_node_list[int(rand)])
+
+	# construct the corresponding mapped nodes in g2
+	V_2 = []
+	for i in V_1:
+		V_2.append(mapping[i])
+
+	#---------------------------------QUBO: Construct matrix H (Beginning) -----------------------------
+
+	# M_1 = \beta \times I_{n_1 \times n_1} \otimes Oi(I_{n_2 \times n_2} ), here n_1 = n_2 = n
+	M_1 = beta * np.kron(
+		np.identity(n, np.int8), 
+		uti.Oi(np.identity(n, np.int8))
+		)  
+
+	# M_2 = \beta \times Oi(I_{n_1 \times n_1}) \otimes I_{n_2 \times n_2}, here n_1 = n_2 = n
+	M_2 = beta * np.kron(
+		uti.Oi(np.identity(n, np.int8)),
+		np.identity(n, np.int8)
+		)
+
+	# M_3 = -2\beta \times I_{n_1n_2 \times n_1n_2}
+	M_3 =  -2 * beta * np.identity(n**2)
+
+	# Extract submatrix of C for which only contains the selected nodes in V_1
+	partial_C = np.zeros((n, n), np.int8)
+
+	"""
+	We have a list of selected vertices, V_1. Each vertex is labeled with a numeric id. At the same time,
+	the adjacency matrix C is constructed in such a way that vertex with id i corresponds to the ith row/column
+	of C. 
+	We use V_1 as a mapping from vertex id to entries in partial_C. For example, partial_C[3, 4] corresponds to
+	the flow between vertices V_1[3] and V_1[4]
+	"""
+	for i in range(n):
+		for j in range(n):
+			partial_C[i, j] = C[V_1[i], V_1[j]]
+
+	# Extract submatrix for D for which only contains the selected nodes in V_2
+	partial_D = np.zeros((n, n), np.int8)
+
+	"""
+	We have a list of selected vertices, V_2. Each vertex is labeled with a numeric id. At the same time,
+	the adjacency matrix D is constructed in such a way that vertex with id i corresponds to the ith row/column
+	of D.
+	We use V_1 as a mapping from vertex id to entries in partial_C. For example, partial_D[3, 4] corresponds to
+	the flow between vertices V_2[3] and V_2[4] 
+	"""
+
+	for i in range(n):
+		for j in range(n):
+			partial_D[i, j] = D[V_2[i], V_2[j]]
+
+	# Finally, matrix H
+	H = np.kron(partial_C, partial_D) + M_1 + M_2 + M_3
+
+	#---------------------------------QUBO: Construct matrix H (Ending) -----------------------------
+
+	#------------------------------QUBO: Construct bias vector J (beginning)-------------------------
+
+	J = [0] * n**2
+
+	for i1 in range(n):
+		i = V_1[i1]
+		nei = set(g1.neighbors(i))
+		nei = list(nei - set(V_1))
+		for i2 in range(n):
+			u = V_2[i2]
+			s = 0
+			for k in nei:
+				psi_k = mapping[k]
+				s += C[i, k] + D[u, psi_k]
+			index = n * (i1) + i2 # Here we use i1 insteand of i1 - 1 because list are zero indexed
+			J[index] = s
+
+	#------------------------------QUBO: Construct bias vector J (ending)-------------------------
+
+
+	# ------------------------------------------------------------------
+	#                       PROPOSED REFINEMENT                        -
+	# ------------------------------------------------------------------
+
+	# The result of the subproblem of size n 
+	result = uti.solve_ising(H, J) #RESULTS ARE FLOATS!!!!!
+
+	# Extract the index and upate the mapping
+	for r in range(len(result)):
+		if result[r] == 1.0:
+			i = V_1[math.floor(r / n)]
+			u = V_2[r % n]
+			# Swapping are closed under V_1 and V_2
+			mapping[int(i)] = int(u)
+
+
+# -----------------------------------------
+#        FINAL MAPPING PERCENTAGE         -
+# -----------------------------------------
+
+# Compute the final mapping percentage
 matched_node = 0
 for i in range(len(g1)):
     if gt_mapping[i] == mapping[i]:
         matched_node += 1
-print("Final mapping percentage: {}".format(matched_node / len(g1))) # 0.9333333333333333
+print("final mapping percentage: {}".format(matched_node / len(g1)))
 
+objective = 0
+for i1 in range(len(g1)):
+    for j1 in range(len(g1)):
+        i2 = mapping[i1]
+        j2 = mapping[j1]
+        objective += C[i1, j1] * D[i2, j2]
+
+print("The final objective value: {}".format(objective))
