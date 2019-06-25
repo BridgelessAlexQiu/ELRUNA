@@ -27,24 +27,24 @@ def construct_random_graph(type = "barabasi_c", n = 300, p = 40, m = 0.4):
 
 #-----------------------------Oppostive identity operation---------------------
 def Oi(I):
-    one = np.ones((I.shape[0], I.shape[0]), np.int8)
+    one = np.ones((I.shape[0], I.shape[0]), np.int64)
     return (one - I)
 
 
 #-----------------------------Initial permuation matrix---------------------------
 
 # Construct the initial similarity matrix
-def initial_solution(g1, g2, node_list, r : "the perturbation probability"):
+def initial_solution(g1, g2, node_list, r : "the perturbation probability", n):
     dim = (len(g1), len(g2)) # dimeonsion of the permutation matrix
-    pi = np.zeros(dim, np.int8) # the permutation matrix, initial entries are 0
+    pi = np.zeros(dim, np.int64) # the permutation matrix, initial entries are 0
 
     # Sort nodes by degrees in descending order. format : list of tuples with size 2
     sorted_ds_g1 = sorted(g1.degree(), key=operator.itemgetter(1), reverse=True)
     sorted_ds_g2 = sorted(g2.degree(), key=operator.itemgetter(1), reverse=True)
 
     # Adjacency matrix of two networks
-    A1 = nx.to_numpy_matrix(g1, dtype = np.int8)
-    A2 = nx.to_numpy_matrix(g2, node_list, dtype = np.int8) # the rows and columns are ordered according to the nodes in g1
+    A1 = nx.to_numpy_matrix(g1, dtype = np.int64)
+    A2 = nx.to_numpy_matrix(g2, node_list, dtype = np.int64) # the rows and columns are ordered according to the nodes in g1
 
     # Initial solution, the while loop is necessary here because we want to skip w.s.p
     i = 0
@@ -55,7 +55,7 @@ def initial_solution(g1, g2, node_list, r : "the perturbation probability"):
 
         # Modified Big-Align Approach
         rand = random.uniform(0, 1)
-        if rand >= r or i == 299:
+        if rand >= r or i == n-1:
             pi[u1, u2] = 1
         else:
             i += 1
@@ -76,14 +76,12 @@ def pairwise_refine(g1, g1_node_list, pi, mapping, C, D, objective, max_iter = 3
         for _ in range(30):
             rand = random.uniform(0, len(g1))
             V_1.append(g1_node_list[int(rand)])
-        
+
         for i1 in range(len(V_1)-1):
             u1 = V_1[i1]
-
             # we don't include vertices in V_1 in the neighborhood
             n1 = set(g1.neighbors(u1))
             n1 = list(n1 - set(V_1))
-
             for j1 in range(i1 + 1):
                 v1 = V_1[j1]
                 u2 = mapping[u1]
@@ -107,7 +105,7 @@ def pairwise_refine(g1, g1_node_list, pi, mapping, C, D, objective, max_iter = 3
                 old_part_3 = 0
                 for n in n2:
                     old_part_3 += C[v1, n] * D[v2, mapping[n]]
-                
+
                 if (new_part_1 + new_part_2 + new_part_3) < (old_part_1 + old_part_2 + old_part_3):
                     objective = objective - (old_part_1 + old_part_2 + old_part_3) + (new_part_1 + new_part_2 + new_part_3)
                     mapping[u1] = v2
@@ -122,18 +120,18 @@ def pairwise_refine(g1, g1_node_list, pi, mapping, C, D, objective, max_iter = 3
 
 def solve_ising(B, bias):
     """
-    Ising model: \sum_{i,j} H_ij \pi_i \pi_j + \sum_i J_i \pi_i 
+    Ising model: \sum_{i,j} H_ij \pi_i \pi_j + \sum_i J_i \pi_i
     """
     mdl = Model()
      # note that B is the sub-matrix
     n = B.shape[0]
-    
+
     # dict of bianry decision variables, format: {i : bdv_i}
     x = {i: mdl.binary_var(name='x_{0}'.format(i)) for i in range(n)}
-    
+
     # objective function
     # (2 * x[i] - 1) * (2 * x[j] - 1): s_i \in {-1,+1}
-    couplers_func =  mdl.sum(2 * B[i,j] * x[i] * x[j] for i in range(n - 1) for j in range(i, n)) # s_i \in {0,1}
+    couplers_func =  mdl.sum(B[i,j] * x[i] * x[j] for i in range(n) for j in range(n)) # s_i \in {0,1}
     bias_func = mdl.sum(float(bias[i]) * x[i] for i in range(n))
     ising_func = couplers_func + bias_func
 
@@ -144,4 +142,3 @@ def solve_ising(B, bias):
     # print('CPLEX solution: ', [int(1-2*i) for i in cplex_solution])  s_i \in {-1,+1}
     # print('CPLEX solution: ', cplex_solution)
     return cplex_solution
-
