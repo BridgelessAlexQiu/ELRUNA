@@ -6,10 +6,10 @@ from collections import defaultdict
 from docplex.mp.constants import ComparisonType
 from docplex.mp.model import Model
 import math
+import matplotlib.pyplot as plt
 
 
-# the large constant
-beta = 1000
+beta = 1000 # Force the constraint
 d_replace = 2
 max_iter = 4000
 sample_size = 5
@@ -49,6 +49,11 @@ gt_mapping = dict()
 for i in range(len(g1_node_list)):
         gt_mapping[g1_node_list[i]] = g2_node_list[i]
 
+# Construct the ground truth inverse mapping
+gt_inverse_mapping = dict()
+for i in range(len(g2_node_list)):
+    gt_inverse_mapping[g2_node_list[i]] = g1_node_list[i]
+
 # Construct the second graph by relabeling the first graph
 g2 = nx.relabel_nodes(g1, gt_mapping)
 
@@ -80,16 +85,12 @@ inverse_mapping = {}
 for k, v in mapping.items():
 	inverse_mapping[v] = k
 
-# Compute the initial mapping percentage
+# Initial mapping percentage
 matched_node = 0
 for i in range(len(g1)):
     if gt_mapping[i] == mapping[i]:
         matched_node += 1
 print("Initial mapping percentage: {}".format(matched_node / len(g1))) #0.6333333333333333
-
-# ------------------------------------------------------------------------------
-#                             INITIAL OBJECTIVE                                -
-# ------------------------------------------------------------------------------
 
 # initial objective value
 objective = 0
@@ -110,20 +111,139 @@ print("The initial objective value: {}".format(objective))
 print("Initial violations: {}".format(count))
 
 
+# ----------------------------------------------- #
+#       Construct the new adjacency matrix        #
+# ----------------------------------------------- #
+
+# The size of the new graph
+graph_size = C.shape[0] + D.shape[0]
+
+E = np.zeros((graph_size, graph_size), np.int64)
+
+# Fill up the initial blocks
+for i in range(C.shape[0]):
+	for j in range(C.shape[0]):
+		if C[i, j] == 1:
+			E[i,j] = 1
+for i in range(D.shape[0]):
+	for j in range(D.shape[0]):
+		if D[i, j] == 1:
+			i_prime = i + C.shape[0]
+			j_prime = j + C.shape[0]
+			E[i_prime, j_prime] = 1
+
+# Fill up the cross section
+for i, j in mapping.items():
+	j_prime = j + C.shape[0]
+	E[i, j_prime] = 1
+	E[j_prime, i] = 1
+
+g3 = nx.from_numpy_matrix(E)
+g3_node_list = np.asarray(g3.nodes()) # list of node ids, starts from 0
+
+
+# ------------------------------------------------------ #
+#             Compute the initial violation              #
+# ------------------------------------------------------ #
+
+# formate: {node_id : violations}
+violation = defaultdict(lambda : 0)
+
+# vertices in g1
+for i in g1.nodes():
+	num_conserved_edges = 0
+	for j in g1.neighbors(i):
+		u = mapping[i]
+		v = mapping[j]
+		if D[u, v] == 1: # D[u,v] == 2 if u and v are not adjacent
+			num_conserved_edges += 1
+	violation[i] = (g1.degree(i) - num_conserved_edges) / g1.degree(i)
+
+# vertices in g2
+for u in g2.nodes():
+	num_conserved_edges = 0
+	for v in g2.neighbors(u):
+		i = inverse_mapping[u]
+		j = inverse_mapping[v]
+		num_conserved_edges += C[i, j]
+	violation[u + C.shape[0]] = (g2.degree(u) - num_conserved_edges) / g2.degree(u)
+
+#-------------------- #
+#      Iteration      #
+# ------------------- #
+"""
+Networkx PageRank Parameters:
+1. G (graph) – Undirected graphs will be converted to a directed graph with two directed edges for each undirected edge.
+2. alpha = 0.85
+3. personalization (dict, optional) - A dictionary with a key for every graph node and nonzero personalization value for each node. 
+									  By default, a uniform distribution is used.
+4. max_iter (integer, optional)  = 100
+5. tol (float, optional) = 1e-06 Error tolerance used to check convergence in power method solver
+6. nstart (dictionary, optional) - Starting value of PageRank iteration for each node.
+7. weight (key, optional) - Edge data key to use as weight. If None weights are set to 1.
+8. 
+
+Return:  Dictionary of nodes with PageRank as value
+"""
+
+dict_ranking = nx.pagerank(g3, alpha = 0.5, personalization = violation)
+
+# format: list of tuples sorted based on the rankings: [(node_id : ranking)]
+sorted_tuple_ranking = uti.sort_dict(dict_ranking)
+
+g1_sorted_ranking = []
+for tup in sorted_tuple_ranking:
+	if tup[0] <= 99:
+		g1_sorted_ranking.append(tup[0])
+
+
+# ------------------------- #
+#      Get ready to plot    #
+# ------------------------- #
+x = []
+y = []
+
 #-------------------------
 #      LOCAL SEARCH      -
 # ------------------------
 
+pre_violation = 0
+unchanged_count = 0
+window = 10
 # iteration
 for iter in range(max_iter):
     # random sample n nodes from the graph
+	# V_1 = []
+	# n = sample_size # sample size
+	# t = 0
+	# while t < n:
+	# 	rand = random.uniform(0, len(g1))
+	# 	if g1_node_list[int(rand)] not in V_1:
+	# 		V_1.append(g1_node_list[int(rand)])
+	# 		t += 1
+
+	# If the number of violation is not improving
+	if pre_violation == violation:
+		unchanged_count += 1
+		stuck += 1
+	else: # If improves
+		stuck = 0
+	pre_violation = violation
+
+	# If we have been stucked for some iterations, move one element forward
+	if unchanged_count == 3:
+		window += 1
+		unchanged_count = 0
+ 
+	# Sample n nodes based on the violation
 	V_1 = []
-	n = sample_size # sample size
-	t = 0
+	V_1.append(g1_sorted_ranking[window - 10])
+	n = sample_size
+	t = 1
 	while t < n:
-		rand = random.uniform(0, len(g1))
-		if g1_node_list[int(rand)] not in V_1:
-			V_1.append(g1_node_list[int(rand)])
+		rand = random.uniform(window - 9, window)
+		if g1_sorted_ranking[int(rand)] not in V_1:
+			V_1.append(g1_sorted_ranking[int(rand)])
 			t += 1
 
 	# construct the corresponding mapped nodes in g2
@@ -205,7 +325,6 @@ for iter in range(max_iter):
 
 	#------------------------------QUBO: Construct bias vector J (ending)-------------------------
 
-
 	# ------------------------------------------------------------------
 	#                       PROPOSED REFINEMENT                        -
 	# ------------------------------------------------------------------
@@ -228,31 +347,42 @@ for iter in range(max_iter):
 
 	# Updated objective and violations
 	objective = 0
-	count = 0
+	violation = 0
 	for i1 in range(len(g1)):
 		for j1 in range(len(g1)):
 			i2 = mapping[i1]
 			j2 = mapping[j1]
 			if C[i1, j1] == 1:
 				if D[i2, j2] == d_replace:
-					count += 1
+					violation += 1
 			if C[i1, j1] == 0:
 				if D[i2, j2] == 1:
-					count += 1
+					violation += 1
 			objective += C[i1, j1] * D[i2, j2]
 
-	print("The new objective value: {}".format(objective))
-	print("The upated number of  violations: {}".format(count))
+	print("Iteration: {}".format(iter))
+	print("New objectives: {} | New violations: {}".format(objective, violation))
 	print("-----------------")
 
+	x.append(iter + 1)
+	y.append(violation)
+
 	# Break if solved
-	if count == 0:
+	if violation == 0:
+		break
+	# stuck at local minimum
+	elif stuck > 30:
 		break
 
+
+plt.plot(x, y, '--bo')
+plt.show()
+
 # -----------------------------------------
-#        FINAL MAPPING PERCENTAGE         -
+#             FINAL MAPPING               -
 # -----------------------------------------
 
+# Final objective and violations
 objective = 0
 count = 0
 for i1 in range(len(g1)):
@@ -269,13 +399,17 @@ for i1 in range(len(g1)):
 print("The final objective value: {}".format(objective))
 print("Final violations: {}".format(count))
 
+# Final mapping percentage
 matched_node = 0
 for i in range(len(g1)):
     if gt_mapping[i] == mapping[i]:
         matched_node += 1
 print("Final mapping percentage: {}".format(matched_node / len(g1))) #0.6333333333333333
 
+# Check if the contraint workds fine
 if not wrong:
 	print("The constraint works fine")
+else:
+	print("The constraint fails")
 
 

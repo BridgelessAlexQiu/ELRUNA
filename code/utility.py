@@ -13,6 +13,26 @@ def degree_sequence(G):
         sequence[node] = degree
     return sequence
 
+#--------------------------Check if a matrix is symmetric----------------------
+def is_symmetric(a, rtol=1e-05, atol=1e-08):
+    return np.allclose(a, a.T, rtol=rtol, atol=atol)
+
+#--------------------------Sort dictionary----------------------------------
+def sort_dict(d : "the dictionary", dec = True):
+    if dec:
+        sorted_d = sorted(d.items(), key=lambda kv: kv[1], reverse = True)
+    else:
+        sorted_d = sorted(d.items(), key=lambda kv: kv[1])
+    return sorted_d
+
+#--------------------------Sort dictionary----------------------------------
+def special_sort_dict(d : "the dictionary", dec = True):
+    if dec:
+        sorted_d = sorted(d.items(), key=lambda kv: kv[1][0], reverse = True)
+    else:
+        sorted_d = sorted(d.items(), key=lambda kv: kv[1][0])
+    return sorted_d
+
 #---------------------------random graph generator--------------------------
 # Return a particular random graph
 def construct_random_graph(type = "barabasi_c", n = 300, p = 40, m = 0.4):
