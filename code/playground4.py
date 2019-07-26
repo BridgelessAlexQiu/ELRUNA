@@ -3,6 +3,7 @@ import networkx as nx
 import random
 import utility as uti
 from collections import defaultdict
+import cProfile
 # from docplex.mp.constants import ComparisonType
 # from docplex.mp.model import Model
 import math
@@ -12,7 +13,12 @@ import math
 #       Parameteres      -
 # ------------------------
 d_replace = 2
-network_size = 100
+network_size = 200
+
+# Start the profiler
+print("start the profiler for network creation")
+pr = cProfile.Profile()
+pr.enable()
 
 #-------------------------------------------------
 #              EXAMPLE RANDOM GRAPHS             -
@@ -64,18 +70,25 @@ S = np.ones((g1_size, g2_size), np.float64)
 # ------------------------------
 b = np.ones(((g1_size + g2_size), 1), np.float64)
 
+# End the profiler
+pr.disable()
+pr.print_stats(sort='time')
+
+# Start the profiler
+print("start the profiler for iteration")
+pr = cProfile.Profile()
+pr.enable()
+
 #------------------------------------------------------------------------#
 #                         Iteration starts here                         #
 #------------------------------------------------------------------------#
-for _ in range(max_iter):
+for _ in range(1):
 	# ------------------------
 	#       new S and b      -
 	# ------------------------
-	b_new = np.ones(((g1_size + g2_size), 1), np.float64)
-	b_new = np.negative(b_new)
-	
-	S_new = np.zeros((g1_size, g2_size), np.float64) # the only time we use S_new is assignment, therefore, its initial value doesn't matter
-
+	# b_new = -np.ones(((g1_size + g2_size), 1), np.float64)
+	# S_new = np.zeros((g1_size, g2_size), np.float64) # the only time we use S_new is assignment, therefore, its initial value doesn't matter
+	n = 0
 	# NOTE: for b and b_new, the index of u is u + g1_size
 	for i in g1.nodes():
 		for u in g2.nodes():
@@ -85,15 +98,19 @@ for _ in range(max_iter):
 			# Instead of constructing the actural graph (which is costly), we create a dictionary B with the format:
 			# {(j, v) : weight}
 			# the 0 means this edge has not been deleted
-			B = defaultdict(lambda : 0.0)
-			neighbors_of_i = {}
-			neighbors_of_u = {}
-			for j in g1.neighbors(i):
-				for v in g2.neighbors(u):
-					B[(j, v)] = S[j, v]
-					neighbors_of_i[j] = 0
-					neighbors_of_u[v] = 0
+			# B = defaultdict(lambda : 0.0)
+			B = []
+			neighbors_of_i = list(g1.neighbors(i))
+			neighbors_of_u = list(g2.neighbors(u))
+			status_neighbors_of_i = [0] * g1_size
+			status_neighbors_of_u = [0] * g2_size
 			
+			for j in range(len(neighbors_of_i)):
+				for v in range(len(neighbors_of_u)):
+					B.append( ( (j,v), S[j,v] ) )
+					# neighbors_of_i[j] = 0
+					# neighbors_of_u[v] = 0
+
 			# format (list of tuples): [ ( (j, v), weight ) ]
 			sorted_B = uti.sort_dict(B)
 
@@ -103,7 +120,7 @@ for _ in range(max_iter):
 
 			while index_of_the_largest_undeleted_edge != total_number_of_edges:
 				# print(index_of_the_largest_undeleted_edge)
-				# format: ((j, v), [weight, 0])
+				# format: ((j, v), weight)
 				largest = sorted_B[index_of_the_largest_undeleted_edge]
 				j = largest[0][0]
 				v = largest[0][1]
@@ -129,44 +146,48 @@ for _ in range(max_iter):
 	b = b_new
 	S = S_new
 
-
-# --------------------------------------
-#                 MAIN                 -
-# --------------------------------------
-mapping = dict()
-selected = [0] * (g2_size)
-
-for i in range(S.shape[0]):
-	maxi = -1
-	max_index = 0
-	for u in range(S.shape[1]):
-		if S[i,u] > maxi and not selected[u]:
-			maxi = S[i, u]
-			max_index = u 
-	mapping[i] = max_index
-	selected[max_index] = 1
-
-matched_node = 0
-for i in range(S.shape[0]):
-    if gt_mapping[i] == mapping[i]: 
-        matched_node += 1
-print("Initial mapping percentage: {}".format(matched_node / S.shape[0]))
-
-count = 0
-for i1 in range(len(g1)):
-	for j1 in range(len(g1)):
-		i2 = mapping[i1]
-		j2 = mapping[j1]
-		if C[i1, j1] == 1:
-			if D[i2, j2] == d_replace:
-				count += 1
-		if C[i1, j1] == 0:
-			if D[i2, j2] == 1:
-				count += 1
-print("Initial violations: {}".format(count))
+# End the profiler
+pr.disable()
+pr.print_stats(sort='time')
 
 
-def IsoRank(A1, A2, tol, max_iter, H = None):
+# # --------------------------------------
+# #                 MAIN                 -
+# # --------------------------------------
+# mapping = dict()
+# selected = [0] * (g2_size)
+
+# for i in range(S.shape[0]):
+# 	maxi = -1
+# 	max_index = 0
+# 	for u in range(S.shape[1]):
+# 		if S[i,u] > maxi and not selected[u]:
+# 			maxi = S[i, u]
+# 			max_index = u 
+# 	mapping[i] = max_index
+# 	selected[max_index] = 1
+
+# matched_node = 0
+# for i in range(S.shape[0]):
+#     if gt_mapping[i] == mapping[i]: 
+#         matched_node += 1
+# print("Initial mapping percentage: {}".format(matched_node / S.shape[0]))
+
+# count = 0
+# for i1 in range(len(g1)):
+# 	for j1 in range(len(g1)):
+# 		i2 = mapping[i1]
+# 		j2 = mapping[j1]
+# 		if C[i1, j1] == 1:
+# 			if D[i2, j2] == d_replace:
+# 				count += 1
+# 		if C[i1, j1] == 0:
+# 			if D[i2, j2] == 1:
+# 				count += 1
+# print("Initial violations: {}".format(count))
+
+
+def IsoRank(A1, A2, tol = 0.000005, max_iter = 500, H = None):
 	# Shapes of two matrices
 	n1 = A1.shape[0]
 	n2 = A2.shape[0]
@@ -186,7 +207,7 @@ def IsoRank(A1, A2, tol, max_iter, H = None):
 	S = np.full((n2, n1), 1/(n1 * n2))
 
 	# Prior similarity matrix
-	if not prior:
+	if not H:
 		H = S
 
 	# Main iterations
@@ -197,8 +218,22 @@ def IsoRank(A1, A2, tol, max_iter, H = None):
 		M2 = np.matmul(M1, W1)
 		S = 0.5 * M2 + 0.5 * H
 		delta = np.linalg.norm(S - prev)
-		if delta < 0.000005:
+		if delta < tol:
 			print("Total number of iterations: {}".format(i))
 			break
+		print("One itration complete")
 
 	return S
+
+# pr = cProfile.Profile()
+# pr.enable()
+
+# A = []
+# for i in range(200):
+# 	for j in range(200):
+# 		for k in range(60):
+# 			for l in range(60):
+# 				A.append(1)
+
+# pr.disable()
+# pr.print_stats(sort='time')

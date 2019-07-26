@@ -162,3 +162,42 @@ def solve_ising(B, bias):
     # print('CPLEX solution: ', [int(1-2*i) for i in cplex_solution])  s_i \in {-1,+1}
     # print('CPLEX solution: ', cplex_solution)
     return cplex_solution
+
+# ------------------ IsoRank -----------------------#
+def IsoRank(A1, A2, tol = 0.000005, max_iter = 500, H = None):
+	# Shapes of two matrices
+	n1 = A1.shape[0]
+	n2 = A2.shape[0]
+
+	# Normalization of adjacency matrix
+	row_sum_1 = np.zeros((n1, 1), np.float64)
+	row_sum_2 = np.zeros((n2, 1), np.float64)
+
+	for i in range(n1):
+		row_sum_1[i, 0] = 1/np.sum(A1[i])
+		row_sum_2[i, 0] = 1/np.sum(A2[i])
+
+	W1 = np.multiply(row_sum_1, A1)
+	W2 = np.multiply(row_sum_2, A2)
+
+	# Inilization of similarity matrix
+	S = np.full((n2, n1), 1/(n1 * n2))
+
+	# Prior similarity matrix
+	if not H:
+		H = S
+
+	# Main iterations
+	for i in range(max_iter):
+		prev = S
+		W2_t = np.transpose(W2)
+		M1 = np.matmul(W2_t, S)
+		M2 = np.matmul(M1, W1)
+		S = 0.5 * M2 + 0.5 * H
+		delta = np.linalg.norm(S - prev)
+		if delta < tol:
+			print("Total number of iterations: {}".format(i))
+			break
+		print("One itration complete")
+
+	return S

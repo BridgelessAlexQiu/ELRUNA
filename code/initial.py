@@ -3,16 +3,19 @@ import networkx as nx
 import random
 import utility as uti
 from collections import defaultdict
-from docplex.mp.constants import ComparisonType
-from docplex.mp.model import Model
+import cProfile
 import math
-import matplotlib.pyplot as plt
 
 # ------------------------
 #       Parameteres      -
 # ------------------------
 d_replace = 2
-network_size = 50
+network_size = 100
+
+# Start the profiler
+print("### start the profiler for network creatio ###")
+pr = cProfile.Profile()
+pr.enable()
 
 #-------------------------------------------------
 #              EXAMPLE RANDOM GRAPHS             -
@@ -20,7 +23,6 @@ network_size = 50
 g1 = uti.construct_random_graph("barabasi_c", n = network_size)
 
 max_iter = nx.diameter(g1)
-
 
 # ------------------------------------------------------------
 #             CONSTRUCT THE GROUND TRUTH MAPPING             -
@@ -41,17 +43,6 @@ for i in range(len(g2_node_list)):
 # Construct the second graph by relabeling the first graph
 g2 = nx.relabel_nodes(g1, gt_mapping)
 
-# ------------------------------------
-#         Adjacency matrices         -
-# ------------------------------------
-C = nx.to_numpy_matrix(g1, dtype = np.int64)
-D = nx.to_numpy_matrix(g2, g1_node_list, dtype = np.int64)
-
-for i in range(len(g2)):
-    for j in range(len(g2)):
-        if D[i, j] == 0:
-            D[i, j] = d_replace
-
 # The size of two networks will be differnt for real networks
 g1_size = g2_size = network_size
 
@@ -65,15 +56,23 @@ S = np.ones((g1_size, g2_size), np.float64)
 # ------------------------------
 b = np.ones(((g1_size + g2_size), 1), np.float64)
 
-#-------------------------Iteration will starts here --------------------------#
+# End the profiler
+pr.disable()
+pr.print_stats(sort='time')
 
+# Start the profiler
+print("### start the profiler for the main iteration ###")
+pr = cProfile.Profile()
+pr.enable()
+
+#------------------------------------------------------------------------#
+#                         Iteration starts here                         #
+#------------------------------------------------------------------------#
 for _ in range(max_iter):
 	# ------------------------
 	#       new S and b      -
 	# ------------------------
-	b_new = np.ones(((g1_size + g2_size), 1), np.float64)
-	b_new = np.negative(b_new)
-	
+	b_new = -np.ones(((g1_size + g2_size), 1), np.float64)
 	S_new = np.zeros((g1_size, g2_size), np.float64) # the only time we use S_new is assignment, therefore, its initial value doesn't matter
 
 	# NOTE: for b and b_new, the index of u is u + g1_size
@@ -83,50 +82,42 @@ for _ in range(max_iter):
 			#    The complete bipartite graph       -
 			# ---------------------------------------
 			# Instead of constructing the actural graph (which is costly), we create a dictionary B with the format:
-			# {(j, v) : [weight, 0]}
-			# the 0 means this edge has not been deleted
-			B = defaultdict(lambda : [0.0, 0])
+			# {(j, v) : weight}
+			B = defaultdict(lambda : 0.0)
+			neighbors_of_i = {}
+			neighbors_of_u = {}
 			for j in g1.neighbors(i):
 				for v in g2.neighbors(u):
-					B[(j, v)][0] = S[j, v]
+					B[(j, v)] = S[j, v]
+					neighbors_of_i[j] = 0
+					neighbors_of_u[v] = 0
+			
+			# format (list of tuples): [ ( (j, v), weight ) ]
+			sorted_B = uti.sort_dict(B)
 
-			# format (list of tuples): [ ( (j, v), [weight, 0] ) ]
-			sorted_B = uti.special_sort_dict(B)
-
-			c = 0 # accumulated similarity values
-			num_deleted_edges = 0
 			index_of_the_largest_undeleted_edge = 0
+			c = 0 # accumulated similarity values
+			total_number_of_edges = len(list(g1.neighbors(i))) *  len(list(g2.neighbors(u)))
 
-			while num_deleted_edges != len(sorted_B):
-				while sorted_B[index_of_the_largest_undeleted_edge][1][1]:
-					index_of_the_largest_undeleted_edge += 1
-				# format: ((j, v), [weight, 0])
+			while index_of_the_largest_undeleted_edge != total_number_of_edges:
+				# print(index_of_the_largest_undeleted_edge)
+				# format: ((j, v), weight)
 				largest = sorted_B[index_of_the_largest_undeleted_edge]
 				j = largest[0][0]
 				v = largest[0][1]
-				weight = largest[1][0]
-				if weight == b[j,0] and weight == b[v + g1_size, 0]: # perfect matching
-					c += weight
-					for edge in sorted_B:
-						if (j == edge[0][0] or v == edge[0][1]) and edge[1][1] == 0:
-							num_deleted_edges += 1
-							edge[1][1] = 1
-				elif weight == b[j,0] and weight < b[v + g1_size, 0]: # half matching
-					c += 2 * weight - b[v + g1_size, 0]
-					for edge in sorted_B:
-						if (j == edge[0][0] or v == edge[0][1]) and edge[1][1] == 0:
-							num_deleted_edges += 1
-							edge[1][1] = 1
-				elif weight < b[j,0] and weight == b[v + g1_size, 0]: # half matching
-					c += 2 * weight - b[j, 0]
-					for edge in sorted_B:
-						if (j == edge[0][0] or v == edge[0][1]) and edge[1][1] == 0:
-							num_deleted_edges += 1
-							edge[1][1] = 1
-				elif weight < b[j,0] and weight < b[v + g1_size, 0]: # no matching
-					sorted_B[index_of_the_largest_undeleted_edge][1][1] = 1
-					num_deleted_edges += 1
-				
+				weight = largest[1]
+				if not (weight < b[j,0] and weight < b[v + g1_size, 0]):
+					larger = max(b[j,0], b[v + g1_size, 0])
+					c += 2 * weight - larger
+					neighbors_of_i[j] = 1
+					neighbors_of_u[v] = 1
+
+				index_of_the_largest_undeleted_edge += 1
+
+				while (index_of_the_largest_undeleted_edge != total_number_of_edges) and ((neighbors_of_i[sorted_B[index_of_the_largest_undeleted_edge][0][0]]) or (neighbors_of_u[sorted_B[index_of_the_largest_undeleted_edge][0][1]])):
+					index_of_the_largest_undeleted_edge += 1
+			
+			# Compute the updated similarity
 			maxi = max(len(list(g1.neighbors(i))), len(list(g2.neighbors(u))))
 			S_new[i,u] = c / maxi
 			if S_new[i,u] > b_new[i]:
@@ -137,9 +128,18 @@ for _ in range(max_iter):
 	b = b_new
 	S = S_new
 
+# End the profiler
+pr.disable()
+pr.print_stats(sort='time')
+
+
+# --------------------------------------
+#                 MAIN                 -
+# --------------------------------------
 mapping = dict()
 selected = [0] * (g2_size)
 
+# Greedy 
 for i in range(S.shape[0]):
 	maxi = -1
 	max_index = 0
@@ -154,7 +154,7 @@ matched_node = 0
 for i in range(S.shape[0]):
     if gt_mapping[i] == mapping[i]: 
         matched_node += 1
-print("Initial mapping percentage: {}".format(matched_node / S.shape[0]))
+print("Initial mapping percentage: {} (A percentage less than 1.0 does not necessarily indicate incorrect mappings)".format(matched_node / S.shape[0]))
 
 count = 0
 for i1 in range(len(g1)):
@@ -167,13 +167,5 @@ for i1 in range(len(g1)):
 		if C[i1, j1] == 0:
 			if D[i2, j2] == 1:
 				count += 1
-print("Initial violations: {}".format(count))
+print("Initial violations: {} (0 violation indicates isomorphic mappings)".format(count))
 
-# Archive
-# g1 = nx.read_edgelist("test1.edgelist", nodetype = int)
-# g2 = nx.read_edgelist("test2.edgelist", nodetype = int)
-
-# g1_node_list = list(g1.nodes()) 
-# g2_node_list = list(g2.nodes())
-
-# gt_mapping = {0 : 0, 1 : 1, 2 : 2, 3 : 3, 4 : 4, 5 : 5, 6 : 6, 7 : 7, 8 : 8}
