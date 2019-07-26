@@ -13,7 +13,7 @@ d_replace = 2
 network_size = 100
 
 # Start the profiler
-print("### start the profiler for network creatio ###")
+print("### start the profiler for network creation ###")
 pr = cProfile.Profile()
 pr.enable()
 
@@ -42,6 +42,12 @@ for i in range(len(g2_node_list)):
 
 # Construct the second graph by relabeling the first graph
 g2 = nx.relabel_nodes(g1, gt_mapping)
+
+# ------------------------------------
+#         Adjacency matrices         -
+# ------------------------------------
+C = nx.to_scipy_sparse_matrix(g1, dtype = np.int64)
+D = nx.to_scipy_sparse_matrix(g2, nodelist = g1_node_list, dtype = np.int64)
 
 # The size of two networks will be differnt for real networks
 g1_size = g2_size = network_size
@@ -83,17 +89,17 @@ for _ in range(max_iter):
 			# ---------------------------------------
 			# Instead of constructing the actural graph (which is costly), we create a dictionary B with the format:
 			# {(j, v) : weight}
-			B = defaultdict(lambda : 0.0)
+			B = []
 			neighbors_of_i = {}
 			neighbors_of_u = {}
 			for j in g1.neighbors(i):
 				for v in g2.neighbors(u):
-					B[(j, v)] = S[j, v]
+					B.append(((j,v), S[j,v]))
 					neighbors_of_i[j] = 0
 					neighbors_of_u[v] = 0
 			
 			# format (list of tuples): [ ( (j, v), weight ) ]
-			sorted_B = uti.sort_dict(B)
+			sorted_B = sorted(B, key=lambda x: x[1])
 
 			index_of_the_largest_undeleted_edge = 0
 			c = 0 # accumulated similarity values
@@ -168,4 +174,3 @@ for i1 in range(len(g1)):
 			if D[i2, j2] == 1:
 				count += 1
 print("Initial violations: {} (0 violation indicates isomorphic mappings)".format(count))
-
