@@ -4,8 +4,11 @@ import operator
 import random
 from docplex.mp.constants import ComparisonType
 from docplex.mp.model import Model
+from collections import defaultdict
 
-#----------------------------degree seqeunce------------------------------------
+# ----------------------- #
+#     degree seqeunce     #
+# ----------------------- #
 # Return the degree sequence, format (dict): {node1: degree, node2: degree, ...}
 def degree_sequence(G):
     sequence = dict()
@@ -13,11 +16,15 @@ def degree_sequence(G):
         sequence[node] = degree
     return sequence
 
-#--------------------------Check if a matrix is symmetric----------------------
+# ----------------------------------------------------------- #
+#                Check if a matrix is symmetric               # 
+# ----------------------------------------------------------- #
 def is_symmetric(a, rtol=1e-05, atol=1e-08):
     return np.allclose(a, a.T, rtol=rtol, atol=atol)
 
-#--------------------------Sort dictionary----------------------------------
+# ----------------------------------------- #
+#             Sort Dictionary               #
+# ----------------------------------------- #
 def sort_dict(d : "the dictionary", dec = True):
     if dec:
         sorted_d = sorted(d.items(), key=lambda kv: kv[1], reverse = True)
@@ -25,15 +32,9 @@ def sort_dict(d : "the dictionary", dec = True):
         sorted_d = sorted(d.items(), key=lambda kv: kv[1])
     return sorted_d
 
-#--------------------------Sort dictionary----------------------------------
-def special_sort_dict(d : "the dictionary", dec = True):
-    if dec:
-        sorted_d = sorted(d.items(), key=lambda kv: kv[1][0], reverse = True)
-    else:
-        sorted_d = sorted(d.items(), key=lambda kv: kv[1][0])
-    return sorted_d
-
-#---------------------------random graph generator--------------------------
+# --------------------------------------- #
+#         Random Graph Generator          #
+# --------------------------------------- #
 # Return a particular random graph
 def construct_random_graph(type = "barabasi_c", n = 300, p = 40, m = 0.4):
     if type == "barabasi_c":
@@ -45,14 +46,16 @@ def construct_random_graph(type = "barabasi_c", n = 300, p = 40, m = 0.4):
     else:
         raise ValueError('Unknown graph type!')
 
-#-----------------------------Oppostive identity operation---------------------
+# --------------------------------------------------- #
+#           Oppostive Identity Operation              #
+# --------------------------------------------------- #
 def Oi(I):
     one = np.ones((I.shape[0], I.shape[0]), np.int64)
     return (one - I)
 
-
-#-----------------------------Initial permuation matrix---------------------------
-
+# ------------------------------------------------------------ #
+#                    Initial permuation matrix                 #
+# ------------------------------------------------------------ #
 # Construct the initial similarity matrix
 def initial_solution(g1, g2, node_list, r : "the perturbation probability", n):
     dim = (len(g1), len(g2)) # dimeonsion of the permutation matrix
@@ -87,8 +90,9 @@ def initial_solution(g1, g2, node_list, r : "the perturbation probability", n):
         i += 1
     return pi
 
-
-#-------------------------------Refinement by swapping pairs (baseline)-------------------------
+# --------------------------------------------------------------------------- #
+#                 Refinement by Swapping Pairs (Baseline)                     #
+# --------------------------------------------------------------------------- #
 def pairwise_refine(g1, g1_node_list, pi, mapping, C, D, objective, max_iter = 300):
     for z in range(max_iter):
     # random sample 30 nodes from the graph
@@ -136,12 +140,11 @@ def pairwise_refine(g1, g1_node_list, pi, mapping, C, D, objective, max_iter = 3
                     pi[v1, u2] = 1
     return mapping, pi
 
-#------------------------------------------- Ising function-------------------------------------------
-
+# ------------------------------------------- #
+#                 Ising Solver                #
+# ------------------------------------------- #
 def solve_ising(B, bias):
-    """
-    Ising model: \sum_{i,j} H_ij \pi_i \pi_j + \sum_i J_i \pi_i
-    """
+
     mdl = Model()
      # note that B is the sub-matrix
     n = B.shape[0]
@@ -163,7 +166,9 @@ def solve_ising(B, bias):
     # print('CPLEX solution: ', cplex_solution)
     return cplex_solution
 
-# ------------------ IsoRank -----------------------#
+# -------------------------------------------------- #
+#                     IsoRank                        #
+# -------------------------------------------------- #
 def IsoRank(A1, A2, tol = 0.000005, max_iter = 500, H = None):
 	# Shapes of two matrices
 	n1 = A1.shape[0]
@@ -201,3 +206,190 @@ def IsoRank(A1, A2, tol = 0.000005, max_iter = 500, H = None):
 		print("One itration complete")
 
 	return S
+
+
+# ------------------------------------------------- #
+#        Initial Solution with Naive Sorting        #
+# ------------------------------------------------- #
+def initial_solution_naive_sorting(S, b, g1, g2, max_iter):
+	# the sizes of two networks
+	g1_size = len(g1)
+	g2_size = len(g2)
+
+	#--------------------------------------- #
+	#          Iteration starts here         #
+	#--------------------------------------- #
+	for _ in range(max_iter):
+		# ------------------------
+		#       new S and b      -
+		# ------------------------
+		b_new = -np.ones(((g1_size + g2_size), 1), np.float64)
+		S_new = np.empty((g1_size, g2_size), np.float64) # the only time we use S_new is assignment, therefore, its initial value doesn't matter
+
+		# NOTE: for b and b_new, the index of u is u + g1_size
+		for i in g1.nodes():
+			for u in g2.nodes():
+				# ---------------------------------------
+				#    The complete bipartite graph       -
+				# ---------------------------------------
+				# Instead of constructing the actural graph (which is costly), we create a dictionary B with the format:
+				# {(j, v) : weight}
+				B = []
+				neighbors_of_i = {}
+				neighbors_of_u = {}
+				for j in g1.neighbors(i):
+					for v in g2.neighbors(u):
+						B.append(((j,v), S[j,v]))
+						neighbors_of_i[j] = 0
+						neighbors_of_u[v] = 0
+				
+				# format (list of tuples): [ ( (j, v), weight ) ]
+				sorted_B = sorted(B, key=lambda x: x[1], reverse = True)
+				
+				index_of_the_largest_undeleted_edge = 0
+				c = 0 # accumulated similarity values
+				total_number_of_edges = len(list(g1.neighbors(i))) *  len(list(g2.neighbors(u)))
+
+				while index_of_the_largest_undeleted_edge != total_number_of_edges:
+					# print(index_of_the_largest_undeleted_edge)
+					# format: ((j, v), weight)
+					largest = sorted_B[index_of_the_largest_undeleted_edge]
+					j = largest[0][0]
+					v = largest[0][1]
+					weight = largest[1]
+					if not (weight < b[j,0] and weight < b[v + g1_size, 0]):
+						larger = max(b[j,0], b[v + g1_size, 0])
+						c += 2 * weight - larger
+						neighbors_of_i[j] = 1
+						neighbors_of_u[v] = 1
+
+					index_of_the_largest_undeleted_edge += 1
+
+					while (index_of_the_largest_undeleted_edge != total_number_of_edges) and ((neighbors_of_i[sorted_B[index_of_the_largest_undeleted_edge][0][0]]) or (neighbors_of_u[sorted_B[index_of_the_largest_undeleted_edge][0][1]])):
+						index_of_the_largest_undeleted_edge += 1
+				
+				# Compute the updated similarity
+				maxi = max(len(list(g1.neighbors(i))), len(list(g2.neighbors(u))))
+				S_new[i,u] = c / maxi
+				if S_new[i,u] > b_new[i]:
+					b_new[i] = S_new[i,u]
+				if S_new[i,u] > b_new[u + g1_size]:
+					b_new[u + g1_size] = S_new[i,u]
+		# Update
+		b = b_new
+		S = S_new
+	return S
+
+# -------------------------------------------------- #
+#          Initial Solution Enhacned Sorting         #
+# -------------------------------------------------- #
+def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, max_iter):
+    # the sizes of two networks
+    g1_size = len(g1)
+    g2_size = len(g2)
+
+    #--------------------------------------- #
+	#          Iteration starts here         #
+	#--------------------------------------- #
+    for _ in range(max_iter):
+        # -----------------------#
+		#       new S and b      #
+		# -----------------------#
+        b_g1_new = [-1.0] * g1_size
+        b_g2_new = [-1.0] * g2_size
+        S_new = [[None for u in range(g2_size)] for i in range(g1_size)] # the only time we use S_new is assignment, therefore, its initial value doesn't matter
+
+        # NOTE: for b and b_new, the index of v is v + g1_size
+        for i in g1.nodes():
+            for u in g2.nodes():
+                B = []
+                c = 0 # sum
+                g1_is_deleted = [0] * g1_size
+                g2_is_deleted = [0] * g2_size
+                # Iterate over neighborhood
+                for j in g1.neighbors(i):
+                    for v in g2.neighbors(u):
+                        if not g2_is_deleted[v]:
+                            if S[j][v] == b_g1[j] == b_g2[v]:
+                                c += S[j][v]
+                                g1_is_deleted[j] = 1
+                                g2_is_deleted[v] = 1
+                                break
+                            elif (S[j][v] == b_g1[j] < b_g2[v]) or (S[j][v] == b_g2[v] < b_g1[j]):
+                                B.append( ((j,v), S[j][v]) )
+                        
+                # Sort B by weight
+                sorted_B = sorted(B, key=lambda x: x[1], reverse = True)
+                
+                # if not empty
+                if sorted_B:
+                    for pair in sorted_B:
+                        j = pair[0][0]
+                        v = pair[0][1]
+                        if (not g1_is_deleted[j]) and (not g2_is_deleted[v]):
+                            larger = max(b_g1[j], b_g2[v])
+                            c += 2 * pair[1] - larger
+                            g1_is_deleted[j] = g2_is_deleted[v] = 1
+
+                # Compute the updated similarity
+                maxi = max(len(list(g1.neighbors(i))), len(list(g2.neighbors(u))))
+                S_new[i][u] = c / maxi
+                if S_new[i][u] > b_g1_new[i]:
+                    b_g1_new[i] = S_new[i][u]
+                if S_new[i][u] > b_g2_new[u]:
+                    b_g2_new[u] = S_new[i][u]
+        # ------ #
+        # Update #
+        # ------ #
+        b_g1 = b_g1_new
+        b_g2 = b_g2_new
+        S = S_new
+    return S
+
+# ------------------------------------------------- #
+#          Initial Solution Fast Approximation      #
+# ------------------------------------------------- #
+def initial_solution_apprximation(S, b, g1, g2, max_iter):
+	# the sizes of two networks
+	g1_size = len(g1)
+	g2_size = len(g2)
+
+	#--------------------------------------- #
+	#          Iteration starts here         #
+	#--------------------------------------- #
+	for _ in range(max_iter):
+		# -----------------------#
+		#       new S and b      #
+		# -----------------------#
+		b_new = -np.ones(((g1_size + g2_size), 1), np.float64)
+		S_new = np.empty((g1_size, g2_size), np.float64) # the only time we use S_new is assignment, therefore, its initial value doesn't matter
+
+		# NOTE: for b and b_new, the index of u is u + g1_size
+		for i in g1.nodes():
+			for u in g2.nodes():
+				c = 0 # sum
+				is_deleted = defaultdict(lambda : 0)
+				# Iterate all pairs of neighbors
+				for j in g1.neighbors(i):
+					for v in g2.neighbors(u):
+						if (not is_deleted[v]) and ( (S[j,v] == b[j]) or (S[j,v] == b[v + g1_size])):
+							larger = max(b[j], b[v + g1_size])
+							c += 2 * S[j,v] - larger
+							is_deleted[v] = 1
+							break
+
+				# Compute the updated similarity
+				maxi = max(len(list(g1.neighbors(i))), len(list(g2.neighbors(u))))
+				S_new[i,u] = c / maxi
+				if S_new[i,u] > b_new[i]:
+					b_new[i] = S_new[i,u]
+				if S_new[i,u] > b_new[u + g1_size]:
+					b_new[u + g1_size] = S_new[i,u]
+
+		# ------ #
+		# Update #
+		# ------ #
+		b = b_new
+		S = S_new
+	return S
+
