@@ -6,17 +6,26 @@ from collections import defaultdict
 import cProfile
 import math
 
+"""
+Several notes when two real networks of different sizes are used:
+	1. Indexing - node id to index start from 0
+	2. Diameter
+	3. Should map smaller network to larger network
+"""
+
 # -----------------------#
 #       Parameteres      #
 # -----------------------#
 d_replace = 2
-network_size = 200
+network_size = 100
 
 #------------------------------------------------#
 #              Example Random Graph              #
 #------------------------------------------------#
 g1 = uti.construct_random_graph("barabasi_c", n = network_size)
-max_iter = nx.diameter(g1)-1
+
+# NOTE: UPDATE NEEDED HERE: For real networks, max_iter should be equal to the larger diameter - 1
+max_iter = nx.diameter(g1) - 1
 
 # -----------------------------------------------------------#
 #             Construct the Ground Truth Mapping             #
@@ -52,19 +61,31 @@ D = nx.to_scipy_sparse_matrix(g2, nodelist = g1_node_list, dtype = np.int64)
 # ######################################################################### #
 #                                   MAIN                                    #
 # ######################################################################### #
+
+# The initial mapping
 mapping = dict()
+# Determine if an 
 selected = [0] * (g2_size)
 
 # ----------------------------- # 
 #   Initial Similarity Matrix   #
 # ----------------------------- #
-S_ini = [[min(g1.degree[i], g2.degree[u]) / max(g1.degree[i], g2.degree[u]) for u in range(g2_size)] for i in range(g1_size)]
+S_ini = [[min(g1.degree(i), g2.degree(u)) / max(g1.degree(i), g2.degree(u)) for u in range(g2_size)] for i in range(g1_size)]
 
 # ----------------------------- # 
 #     Initial Greedy Vector     #
 # ----------------------------- #
-b_g1_ini = [1.0] * (g1_size)
-b_g2_ini = [1.0] * (g2_size)
+b_g1_ini = [None] * (g1_size)
+b_g2_ini = [None] * (g2_size)
+
+for i in range(g1_size):
+	b_g1_ini[i] = max(S_ini[i])
+for u in range(g2_size):
+	maxi = -2
+	for i in range(g1_size):
+		if S_ini[i][u] > maxi:
+			maxi = S_ini[i][u]
+	b_g2_ini[u] = maxi
 
 # --------------------------- #
 #     Start the Profiler      #
@@ -76,6 +97,7 @@ pr.enable()
 #  Funciton Call  #
 # --------------- #
 S = uti.initial_solution_enhanced(S_ini, b_g1_ini, b_g2_ini, g1, g2, max_iter)
+# S = uti.IsoRank(C, D, tol = 0.000005, max_iter = 500, H = None)
 
 # --------------------------- #
 #      End the Profiler       #
@@ -87,7 +109,7 @@ pr.print_stats(sort='time')
 #       Extract the Mapping (Greedy)      #
 # --------------------------------------- #
 for i in range(g1_size):
-	maxi = -1
+	maxi = -2
 	max_index = 0
 	for u in range(g2_size):
 		if S[i][u] > maxi and not selected[u]:
