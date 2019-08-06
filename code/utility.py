@@ -284,11 +284,7 @@ def initial_solution_naive_sorting(S, b, g1, g2, max_iter):
 # -------------------------------------------------- #
 #          Initial Solution Enhacned Sorting         #
 # -------------------------------------------------- #
-def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, g1_degree_sequence, g2_degree_sequence, max_iter):
-    # the sizes of two networks
-    g1_size = len(g1)
-    g2_size = len(g2)
-
+def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_size, g2_size, max_iter):
     #--------------------------------------- #
 	#          Iteration starts here         #
 	#--------------------------------------- #
@@ -299,57 +295,54 @@ def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, g1_degree_sequence, g2_degr
         b_g1_new = [-1.0] * g1_size
         b_g2_new = [-1.0] * g2_size
         S_new = [[None for u in range(g2_size)] for i in range(g1_size)] # the only time we use S_new is assignment, therefore, its initial value doesn't matter
-
+       
+        # Iterate over all paris
         for i in g1.nodes():
-            N_i = list(g1.neighbors(i)) # list of neighbors of i
             for u in g2.nodes():
                 B = []
                 c = 0 # sum
                 g1_is_deleted = [0] * g1_degree_sequence[i]
                 g2_is_deleted = [0] * g2_degree_sequence[u]
 
-                N_u = list(g2.neighbors(u)) # list of neighbors of u
-
-    #             # Iterate over neighborhood
-    #             # for j_index in range(len(N_i)):
-    #             #     for v_index in range(len(N_u)):
-    #             #         j = N_i[j_index]
-    #             #         v = N_u[v_index]
-    #                     # if not g2_is_deleted[v_index]:
-    #                     #     if S[j][v] == b_g1[j] == b_g2[v]:
-    #                     #         c += S[j][v]
-    #                     #         g1_is_deleted[j_index] = g2_is_deleted[v_index] = 1
-    #                     #         break
-    #                         # elif (S[j][v] == b_g1[j] < b_g2[v]) or (S[j][v] == b_g2[v] < b_g1[j]):
-    #                         #     B.append( ((j_index,v_index), S[j][v]) )
+                # Iterate over neighborhood
+                for j_index in range(g1_degree_sequence[i]):
+                    for v_index in range(g2_degree_sequence[u]):
+                        if not g2_is_deleted[v_index]:
+                            j = g1_neighbor_sequence[i][j_index]
+                            v = g2_neighbor_sequence[u][v_index]
+                            if S[j][v] == b_g1[j] == b_g2[v]:
+                                c += S[j][v]
+                                g1_is_deleted[j_index] = g2_is_deleted[v_index] = 1
+                                break
+                            elif (S[j][v] == b_g1[j] < b_g2[v]) or (S[j][v] == b_g2[v] < b_g1[j]):
+                                B.append( ((j_index,v_index), S[j][v]) )
     
-
-        #         # Sort B by weight
-        #         sorted_B = sorted(B, key=lambda x: x[1], reverse = True)
+                # Sort B by weight
+                sorted_B = sorted(B, key=lambda x: x[1], reverse = True)
                 
-        #         # if not empty
-        #         if sorted_B:
-        #             for pair in sorted_B:
-        #                 j = pair[0][0]
-        #                 v = pair[0][1]
-        #                 if (not g1_is_deleted[j]) and (not g2_is_deleted[v]):
-        #                     larger = max(b_g1[j], b_g2[v])
-        #                     c += 2 * pair[1] - larger
-        #                     g1_is_deleted[j] = g2_is_deleted[v] = 1
+                # if not empty
+                if sorted_B:
+                    for pair in sorted_B:
+                        j = pair[0][0]
+                        v = pair[0][1]
+                        if (not g1_is_deleted[j]) and (not g2_is_deleted[v]):
+                            larger = max(b_g1[j], b_g2[v])
+                            c += 2 * pair[1] - larger
+                            g1_is_deleted[j] = g2_is_deleted[v] = 1
 
-        #         # Compute the updated similarity
-        #         maxi = max(len(list(g1.neighbors(i))), len(list(g2.neighbors(u))))
-        #         S_new[i][u] = c / maxi
-        #         if S_new[i][u] > b_g1_new[i]:
-        #             b_g1_new[i] = S_new[i][u]
-        #         if S_new[i][u] > b_g2_new[u]:
-        #             b_g2_new[u] = S_new[i][u]
-        # # ------ #
-        # # Update #
-        # # ------ #
-        # b_g1 = b_g1_new
-        # b_g2 = b_g2_new
-        # S = S_new
+                # Compute the updated similarity
+                maxi = max(len(list(g1.neighbors(i))), len(list(g2.neighbors(u))))
+                S_new[i][u] = c / maxi
+                if S_new[i][u] > b_g1_new[i]:
+                    b_g1_new[i] = S_new[i][u]
+                if S_new[i][u] > b_g2_new[u]:
+                    b_g2_new[u] = S_new[i][u]
+        # ------ #
+        # Update #
+        # ------ #
+        b_g1 = b_g1_new
+        b_g2 = b_g2_new
+        S = S_new
     return S
 
 # ------------------------------------------------- #
@@ -399,3 +392,10 @@ def initial_solution_apprximation(S, b, g1, g2, max_iter):
 		S = S_new
 	return S
 
+
+def test():
+    for i in range(4500):
+        for u in range(4500):
+            for j in range(40):
+                for k in range(40):
+                    c = 0

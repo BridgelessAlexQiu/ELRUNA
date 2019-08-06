@@ -136,7 +136,7 @@ for i1 in range(len(g1)):
 		i2 = mapping[i1]
 		j2 = mapping[j1]
 		if C[i1, j1] == 1:
-			if D[i2, j2] == d_replace:
+			if D[i2, j2] == 0:
 				count += 1
 		if C[i1, j1] == 0:
 			if D[i2, j2] == 1:
