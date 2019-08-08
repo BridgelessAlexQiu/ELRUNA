@@ -173,19 +173,20 @@ for i in range(g1_size):
 	mapping[i] = max_index
 	selected[max_index] = 1
 
+
 # ------------------------------------ #
 #      Initial Mapping Percentage      #
 # ------------------------------------ #
 matched_node = 0
 for i in range(g1_size):
-    if gt_mapping[i] == mapping[i]:
-        matched_node += 1
+	if gt_mapping[i] == mapping[i]:
+		matched_node += 1
 print("Initial mapping percentage: {} (A percentage less than 1.0 does not necessarily indicate incorrect mappings)".format(matched_node / g1_size))
 
-# ---------------------------- #
-#      Initial Violation       #
-# ---------------------------- #
-count = 0       
+# --------------------------- #
+#      Edge Correctness       #
+# --------------------------- #
+count = 0
 s = set()       
 for i1 in range(len(g1)):
 	i2 = mapping[i1]
@@ -201,8 +202,5 @@ for i1 in range(len(g1)):
 				count += 1
 				s.add(i1)
 				s.add(j1)
-                
-for node in s:  
-	print(node, g1[node])
                 
 print("Initial violations: {} (0 violation indicates isomorphic mappings)".format(count/2))
