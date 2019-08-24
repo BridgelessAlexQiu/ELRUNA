@@ -206,7 +206,6 @@ y = []
 #-------------------------
 #      LOCAL SEARCH      -
 # ------------------------
-
 pre_violation = 0
 unchanged_count = 0
 window = 10

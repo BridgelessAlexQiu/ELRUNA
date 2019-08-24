@@ -12,107 +12,12 @@ import matplotlib.pyplot as plt
 
 # --------------------------------------------- Initial Solution -------------------------------------------------#
 
-# ----------------------------------- #
-#           Read the Network          #
-# ----------------------------------- #
-"""
-Dataset: High Energy Physics - Theory collaboration network
-Link: https://snap.stanford.edu/data/ca-HepTh.html
-Nodes in largest CC: 8638
-Edges in largest CC: 24827
-"""
-
-"""
-Dataset: General Relativity and Quantum Cosmology collaboration network
-Link: https://snap.stanford.edu/data/ca-GrQc.html
-Nodes in largest CC: 4158
-Edges in largest CC: 13428
-File: dataset/CA-GrQc.txt
-"""
-
-"""
-Dataset: Coauthorship network of scientists working on network theory and experiment
-Link: http://www-personal.umich.edu/~mejn/netdata/
-Nodes in largest CC: 379
-Edges in largest CC: 914
-File: newman_netscience.gml
-"""
-
-# g1 = nx.read_gml("dataset/newman_netscience.gml")
-# g1 = nx.read_edgelist("dataset/CA-GrQc.txt")
-
-# ------------------------------------- #
-#         Extract the Largest CC        #
-# ------------------------------------- #
-# largest_cc = max(nx.connected_components(g1), key=len)
-# g1 = g1.subgraph(largest_cc)
-
-# -------------------------------------------------------- #
-#      Relabel the Network with Consecutive Integers       #
-# -------------------------------------------------------- #
-# g1 = nx.convert_node_labels_to_integers(g1)
-
-# --------------------------------------------- #
-#                  Remove Loops                 #
-# --------------------------------------------- #
-# g1.remove_edges_from(g1.selfloop_edges())
-
-# # ---------------------------------------------- #
-# #       Construct the Ground Truth Mapping       #
-# # ---------------------------------------------- #
-# # g1_node_list = np.asarray(g1.nodes())
-# # g2_node_list = np.random.permutation(g1_node_list) # random permutation of the list of node id
-
-# # Construct the ground truth mapping
-# gt_mapping = dict()
-# for i in range(len(g1_node_list)):
-#         gt_mapping[g1_node_list[i]] = g2_node_list[i]
-
-# # Construct the ground truth inverse mapping
-# gt_inverse_mapping = dict()
-# for i in range(len(g2_node_list)):
-#     gt_inverse_mapping[g2_node_list[i]] = g1_node_list[i]
-
-# ------------------------------------------------- #
-#          Construct the Isomorphic Network         #
-# ------------------------------------------------- #
-# g2 = nx.relabel_nodes(g1, gt_mapping)
-
-
-# nx.write_edgelist(g1, "g1_network.edgelist", data = False)
-# nx.write_edgelist(g2, "g2_original_network.edgelist", data = False)
-
-# gt_mapping_file = open("gt_mapping.txt", 'w')
-# for i, u in gt_mapping.items():
-# 	gt_mapping_file.write(str(i) + ' ' + str(u) + '\n')
-
-
-
-# D_orignal = nx.to_numpy_matrix(g2, nodelist = g1_node_list, dtype = np.int64)
-
-
-# # -------------------------------------------------- #
-# #               Perturbation of g2                   #
-# # -------------------------------------------------- #
-# perturbation_prob = 0.002
-# total_number_of_added_edges = 0
-# for i in g2.nodes():
-# 	for j in g2.nodes():
-# 		if i != j:
-# 			random_number = random.uniform(1, 1000)
-# 			if (random_number <= 1000 * perturbation_prob) and (not g2.has_edge(i, j)):
-# 				total_number_of_added_edges += 1
-# 				g2.add_edge(i,j)
-# print("{} edges were added".format(total_number_of_added_edges))
-
-# nx.write_edgelist(g2, "g2_perturbated_network.edgelist", data = False)
-
 # ------------------------------------------------ #
 #                 Read in G1 and G2                #
 # ------------------------------------------------ #
 g1 = nx.read_edgelist("g1_network.edgelist", nodetype = int)
 g2 = nx.read_edgelist('g2_perturbated_network.edgelist', nodetype = int)
-g2_origianl = nx.read_edgelist('g2_original_network.edgelist', nodetype = int)
+g2_original_network = nx.read_edgelist('g2_original_network.edgelist', nodetype = int)
 
 g1_node_list = np.asarray(g1.nodes())
 g2_node_list = np.asarray(g2.nodes())
@@ -225,7 +130,7 @@ pr.enable()
 #  Funciton Call  #
 # --------------- #
 
-S = uti.initial_solution_enhanced(S_ini, b_g1_ini, b_g2_ini, g1, g2, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_size, g2_size, max_iter)
+S = uti.initial_solution_enhanced(S_ini, b_g1_ini, b_g2_ini, g1, g2, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_size, g2_size, max_iter, cut_off = 2)
 
 # --------------------------- #
 #      End the Profiler       #
@@ -247,7 +152,7 @@ edge_weight_pairs = [] # format: [((i,u), weight)]
 
 for i in g1.nodes():
 	for u in g2.nodes():
-		edge_weight_pairs.append(((i,u), S[i][u])) 
+		edge_weight_pairs.append(((i,u), S[i][u]))
 
 sorted_edge_weight_pairs = sorted(edge_weight_pairs, key=lambda x: x[1], reverse = True)
 
@@ -267,10 +172,10 @@ for k, v in mapping.items():
 # ------------------------------------- #
 #      Record the actural mapping       #
 # ------------------------------------- #
-actual_mapping = open("actual_pertubated_mapping.txt", 'w')
-for i, u in mapping.items():
-	actual_mapping.write("{} ({}) - {} ({}) \n".format(i, g1_degree_sequence[i], u, g2_degree_sequence[u]))
-actual_mapping.close()
+# actual_mapping = open("actual_pertubated_mapping.txt", 'w')
+# for i, u in mapping.items():
+# 	actual_mapping.write("{} ({}) - {} ({}) \n".format(i, g1_degree_sequence[i], u, g2_degree_sequence[u]))
+# actual_mapping.close()
 
 # ------------------------------------ #
 #      Initial Mapping Percentage      #
@@ -303,6 +208,15 @@ print("Initial Objective: {}".format(objective))
 
 # --------------------------------------------- End of Initial Solution --------------------------------------#
 
+
+l1 = [240, 149]
+l2 = [230, 301]
+for i in l1:
+	for u in l2:
+		print("Similarity between {} and {} is {}".format(i, u, S[i][u]))
+
+print("280 159:", S[280][159])
+print("120, 118:", S[120][118])
 
 # ------------------------------------------- Quantify the Degree of Mismatching -------------------------------#
 
@@ -385,14 +299,23 @@ dict_ranking = nx.pagerank(g3, alpha = 0.5, personalization = violation_dict)
 # format: list of tuples sorted based on the rankings: [(node_id : ranking)]
 sorted_tuple_ranking = uti.sort_dict(dict_ranking)
 
+# for pair in sorted_tuple_ranking:
+# 	if pair[0] < g1_size:
+# 		print("g1: {} : {}".format(pair[0], pair[1]))
+# 	else:
+# 		print("g2: {} : {}".format(pair[0] - g1_size, pair[1]))
+
 # vertices in g1 order by ranking in descending order
 g1_sorted_ranking = []
 for tup in sorted_tuple_ranking:
 	if tup[0] < g1_size:
 		g1_sorted_ranking.append(tup[0])
 
-# ----------------------------------------------- Refinement -------------------------------------------- #
+# for i in g1_sorted_ranking:
+# 	u = mapping[i]
+# 	print("Vertex {} with degree {} is mapped to vertex {} with degree {}".format(i, g1_degree_sequence[i], u, g2_degree_sequence[u]))
 
+# ----------------------------------------------- Refinement -------------------------------------------- #
 # --------------------- #
 #       Parameters      #
 # --------------------- #
@@ -405,16 +328,12 @@ wrong = False
 #                  Local Search                  #
 # ---------------------------------------------- #
 
-# ------------------------- #
-#      Get ready to plot    #
-# ------------------------- #
-# x = []
-# y = []
-
-# pre_violation = 0 # objective from the previous iteration
 improved = True
 unchanged_count = 0 # the number of iterations that the objective has remain unchanged, gets reset if we move the window
-window = 10 # window size
+sliding_threshold = 10 # if not imporve for this number of itrations, slide the window, reset
+stopping_threshold = 200 # if not imporve for this number of iterations, terminate
+window_size = 30 # window size
+window_location = 0
 stuck  = 0 
 
 # ------------------------ #
@@ -430,18 +349,18 @@ for iter in range(max_iter):
 		unchanged_count = 0
 
 	# If we have been stucked for some iterations, move one element forward
-	if unchanged_count == 3:
-		window += 1
+	if unchanged_count == sliding_threshold:
+		window_location += 1
 		unchanged_count = 0
  
 	# Sample n nodes based on the violation
 	V_1 = []
-	V_1.append(g1_sorted_ranking[window - 10])
+	V_1.append(g1_sorted_ranking[window_location])
 	n = sample_size
 	num_of_sampled_vertices = 1
 
 	while num_of_sampled_vertices < n:
-		rand = random.uniform(window - 9, window)
+		rand = random.uniform(window_location + 1, window_location + window_size)
 		if g1_sorted_ranking[int(rand)] not in V_1:
 			V_1.append(g1_sorted_ranking[int(rand)])
 			num_of_sampled_vertices += 1
@@ -530,7 +449,7 @@ for iter in range(max_iter):
 	# ------------------------------------------------------------------
 
 	# The result of the subproblem of size n
-	result2 = uti.solve_ising(H, J) #RESULTS ARE FLOATS!!!!!
+	result2 = uti.solve_ising(H, J) # RESULTS ARE FLOATS!!!!!
 	constraint_checker = []
 	
 	improved = False
@@ -548,15 +467,9 @@ for iter in range(max_iter):
 				improved = True
 			mapping[i] = u
 			inverse_mapping[u] = i
-	if stuck > 30:
+	if stuck > stopping_threshold:
 		print("Number of iterations: {}".format(iter))
 		break
-
-# ----------------------- #
-#            Plot         #
-# ----------------------- #
-# plt.plot(x, y, '--bo')
-# plt.show()
 
 # --------------------------------------------- #
 #           Final mapping percentage            #
