@@ -6,6 +6,8 @@ from docplex.mp.constants import ComparisonType
 from docplex.mp.model import Model
 from collections import defaultdict
 import cProfile
+import matplotlib.pyplot as plt
+import math
 
 """
     Search Term:
@@ -308,7 +310,7 @@ def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_ne
         for u in g2.nodes():
             for nei in g2.neighbors(u):
                 sum_b_g2[u] += b_g2[nei]
-                
+
         b_g1_new = [0.0] * g1_size
         b_g2_new = [0.0] * g2_size
         S_new = [[None for u in range(g2_size)] for i in range(g1_size)] # the only time we use S_new is assignment, therefore, its initial value doesn't matter
@@ -336,7 +338,7 @@ def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_ne
                                 B.append( ((j_index,v_index), S[j][v]) )
                             elif (S[j][v] == b_g1[j] < b_g2[v]) or (S[j][v] == b_g2[v] < b_g1[j]):
                                 B.append( ((j_index,v_index), S[j][v]) )
-    
+
                 # Sort B by weight
                 sorted_B = sorted(B, key=lambda x: x[1], reverse = True)
                 
@@ -362,6 +364,107 @@ def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_ne
                     b_g1_new[i] = S_new[i][u]
                 if S_new[i][u] > b_g2_new[u]:
                     b_g2_new[u] = S_new[i][u]
+    
+        # ------ #
+        # Update #
+        # ------ #
+        b_g1 = b_g1_new
+        b_g2 = b_g2_new
+        S = S_new
+
+    return S
+
+
+# --------------------------------------------------------- #
+#          Initial Solution Enhacned Sorting Testing        #
+# --------------------------------------------------------- #
+def initial_solution_enhanced_testing(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_size, g2_size, max_iter, g1_node_coverage_percentage, g2_node_coverage_percentage, cut_off):
+    #--------------------------------------- #
+	#          Iteration starts here         #
+	#--------------------------------------- #
+    for num_of_iter in range(max_iter):
+        #------------------ #
+        #      Sum of b     #
+        #------------------ #
+        sum_b_g1 = [0.0] * g1_size
+        sum_b_g2 = [0.0] * g2_size
+        for i in g1.nodes():
+            for nei in g1.neighbors(i):
+                sum_b_g1[i] += b_g1[nei]
+        for u in g2.nodes():
+            for nei in g2.neighbors(u):
+                sum_b_g2[u] += b_g2[nei]
+
+        # -----------------------#
+		#       new S and b      #
+        # -----------------------#
+        b_g1_new = [0.0] * g1_size
+        b_g2_new = [0.0] * g2_size
+        S_new = [[None for u in range(g2_size)] for i in range(g1_size)] # the only time we use S_new is assignment, therefore, its initial value doesn't matter
+        
+        # Iterate over all paris
+        for i in g1.nodes():
+            for u in g2.nodes():
+                B = []
+                c = 0 # sum
+                g1_is_deleted = [0] * g1_degree_sequence[i]
+                g2_is_deleted = [0] * g2_degree_sequence[u]
+
+                # Iterate over neighborhood
+                for j_index in range(g1_degree_sequence[i]):
+                    for v_index in range(g2_degree_sequence[u]):
+                        if not g2_is_deleted[v_index]:
+                            j = g1_neighbor_sequence[i][j_index]
+                            v = g2_neighbor_sequence[u][v_index]
+                            if S[j][v] == b_g1[j] == b_g2[v]:
+                                c += S[j][v]
+                                g1_is_deleted[j_index] = 1
+                                g2_is_deleted[v_index] = 1
+                                break
+                            elif (S[j][v] == b_g1[j] < b_g2[v]) or (S[j][v] == b_g2[v] < b_g1[j]):
+                                B.append( ((j_index,v_index), S[j][v]) )
+                            elif (S[j][v] >= g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) or (S[j][v] >= g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]):
+                                B.append( ((j_index,v_index), S[j][v]) )
+
+                # Sort B by weight
+                sorted_B = sorted(B, key=lambda x: x[1], reverse = True)
+                
+                # if not empty
+                if sorted_B:
+                    for pair in sorted_B:
+                        if pair[1] > 0:
+                            j_index = pair[0][0]
+                            v_index = pair[0][1]
+                            if (not g1_is_deleted[j_index]) and (not g2_is_deleted[v_index]):
+                                j = g1_neighbor_sequence[i][j_index]
+                                v = g2_neighbor_sequence[u][v_index]
+                                discrepancy = 0
+                                if (pair[1] != b_g1[j]) and (pair[1] != b_g2[v]) and (pair[1] >= g1_node_coverage_percentage[j][num_of_iter]*b_g1[j]) and (pair[1] >= g2_node_coverage_percentage[v][num_of_iter]*b_g2[v]):
+                                    c += pair[1]
+                                else:
+                                    if pair[1] == b_g1[j]:
+                                        discrepancy = b_g2[v]
+                                    elif pair[1] == b_g2[v]:
+                                        discrepancy = b_g1[j]
+                                    elif pair[1] < g1_node_coverage_percentage[j][num_of_iter]*b_g1[j]:
+                                        # larger: j, smaller: v
+                                        discrepancy = (1 - (pair[1] - g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]) / (b_g2[v] - g2_node_coverage_percentage[v][num_of_iter] * b_g2[v])) * g1_node_coverage_percentage[j][num_of_iter] * b_g1[j] + (pair[1] - g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]) / (b_g2[v] - g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]) * b_g1[j]
+                                    else:
+                                        # larger: v, smaller: v
+                                        discrepancy = (1 - (pair[1] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) / (b_g1[j] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j])) * g2_node_coverage_percentage[v][num_of_iter] * b_g2[v] + (pair[1] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) / (b_g1[j] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) * b_g2[v]
+                                    c += 2 * pair[1] - discrepancy
+                                
+                                g1_is_deleted[j_index] = 1
+                                g2_is_deleted[v_index] = 1
+
+                # Compute the updated similarity
+                maxi = max(sum_b_g1[i], sum_b_g2[u])
+                S_new[i][u] = c / maxi
+
+                if S_new[i][u] > b_g1_new[i]:
+                    b_g1_new[i] = S_new[i][u]
+                if S_new[i][u] > b_g2_new[u]:
+                    b_g2_new[u] = S_new[i][u]
         # ------ #
         # Update #
         # ------ #
@@ -369,6 +472,7 @@ def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_ne
         b_g2 = b_g2_new
         S = S_new
     return S
+
 
 # ------------------------------------------------- #
 #          Initial Solution Fast Approximation      #

@@ -6,7 +6,6 @@ from collections import defaultdict
 import math
 import matplotlib.pyplot as plt
 
-
 beta = 1000 # Force the constraint
 d_replace = 2
 max_iter = 4000
@@ -14,7 +13,6 @@ sample_size = 5
 network_size = 100
 
 wrong = False
-
 #------------------------------------------------------
 #                  EXAMPLE GRAPH                      -
 # -----------------------------------------------------
