@@ -46,13 +46,17 @@ def sort_dict(d : "the dictionary", dec = True):
 #         Random Graph Generator          #
 # --------------------------------------- #
 # Return a particular random graph
-def construct_random_graph(type = "barabasi_c", n = 300, p = 40, m = 0.4):
-    if type == "barabasi_c":
+def construct_random_graph(type = "homle", n = 300, p = 10, m = 0.4):
+    if type == "homle":
         return nx.powerlaw_cluster_graph(n, p, m)
     elif type == "barabasi":
         return nx.barabasi_albert_graph(n, p)
     elif type == "erdos":
-        return nx.fast_gnp_random_graph(n, 0.3)
+        return nx.erdos_renyi_graph(n, 0.3)
+    elif type == "watts":
+        return nx.connected_watts_strogatz_graph(n, 10, 0.4)
+    elif type == "regular":
+        return nx.random_regular_graph(4, n)
     else:
         raise ValueError('Unknown graph type!')
 
