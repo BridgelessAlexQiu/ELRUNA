@@ -2,8 +2,8 @@ import networkx as nx
 import numpy as np
 import operator
 import random
-from docplex.mp.constants import ComparisonType
-from docplex.mp.model import Model
+# from docplex.mp.constants import ComparisonType
+# from docplex.mp.model import Model
 from collections import defaultdict
 import cProfile
 import matplotlib.pyplot as plt
@@ -46,7 +46,7 @@ def sort_dict(d : "the dictionary", dec = True):
 #         Random Graph Generator          #
 # --------------------------------------- #
 # Return a particular random graph
-def construct_random_graph(type = "homle", n = 300, p = 10, m = 0.4):
+def construct_random_graph(type = "homle", n = 200, p = 10, m = 0.4):
     if type == "homle":
         return nx.powerlaw_cluster_graph(n, p, m)
     elif type == "barabasi":
@@ -154,31 +154,31 @@ def pairwise_refine(g1, g1_node_list, pi, mapping, C, D, objective, max_iter = 3
                     pi[v1, u2] = 1
     return mapping, pi
 
-# ------------------------------------------- #
-#                 Ising Solver                #
-# ------------------------------------------- #
-def solve_ising(B, bias):
+# # ------------------------------------------- #
+# #                 Ising Solver                #
+# # ------------------------------------------- #
+# def solve_ising(B, bias):
 
-    mdl = Model()
-     # note that B is the sub-matrix
-    n = B.shape[0]
+#     mdl = Model()
+#      # note that B is the sub-matrix
+#     n = B.shape[0]
 
-    # dict of bianry decision variables, format: {i : bdv_i}
-    x = {i: mdl.binary_var(name='x_{0}'.format(i)) for i in range(n)}
+#     # dict of bianry decision variables, format: {i : bdv_i}
+#     x = {i: mdl.binary_var(name='x_{0}'.format(i)) for i in range(n)}
 
-    # objective function
-    # (2 * x[i] - 1) * (2 * x[j] - 1): s_i \in {-1,+1}
-    couplers_func =  mdl.sum(B[i,j] * x[i] * x[j] for i in range(n) for j in range(n)) # s_i \in {0,1}
-    bias_func = mdl.sum(float(bias[i]) * x[i] for i in range(n))
-    ising_func = couplers_func + bias_func
+#     # objective function
+#     # (2 * x[i] - 1) * (2 * x[j] - 1): s_i \in {-1,+1}
+#     couplers_func =  mdl.sum(B[i,j] * x[i] * x[j] for i in range(n) for j in range(n)) # s_i \in {0,1}
+#     bias_func = mdl.sum(float(bias[i]) * x[i] for i in range(n))
+#     ising_func = couplers_func + bias_func
 
-    mdl.minimize(ising_func)
-    solution = mdl.solve()
-    cplex_solution = solution.get_all_values()
+#     mdl.minimize(ising_func)
+#     solution = mdl.solve()
+#     cplex_solution = solution.get_all_values()
 
-    # print('CPLEX solution: ', [int(1-2*i) for i in cplex_solution])  s_i \in {-1,+1}
-    # print('CPLEX solution: ', cplex_solution)
-    return cplex_solution
+#     # print('CPLEX solution: ', [int(1-2*i) for i in cplex_solution])  s_i \in {-1,+1}
+#     # print('CPLEX solution: ', cplex_solution)
+#     return cplex_solution
 
 # -------------------------------------------------- #
 #                     IsoRank                        #
@@ -378,7 +378,6 @@ def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_ne
 
     return S
 
-
 # --------------------------------------------------------- #
 #          Initial Solution Enhacned Sorting Testing        #
 # --------------------------------------------------------- #
@@ -463,7 +462,10 @@ def initial_solution_enhanced_testing(S, b_g1, b_g2, g1, g2, g1_neighbor_sequenc
 
                 # Compute the updated similarity
                 maxi = max(sum_b_g1[i], sum_b_g2[u])
-                S_new[i][u] = c / maxi
+                if maxi == 0:
+                    S_new[i][u] = 0
+                else:
+                    S_new[i][u] = c / maxi
 
                 if S_new[i][u] > b_g1_new[i]:
                     b_g1_new[i] = S_new[i][u]
