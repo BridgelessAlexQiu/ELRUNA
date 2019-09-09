@@ -12,6 +12,7 @@ import math
 """
     Search Term:
     sort_dict: sd
+    construct_random_graph: crg
     Enhanced Sorting:ises
 """
 
@@ -45,6 +46,7 @@ def sort_dict(d : "the dictionary", dec = True):
 # --------------------------------------- #
 #         Random Graph Generator          #
 # --------------------------------------- #
+# * Search term: crg
 # Return a particular random graph
 def construct_random_graph(type = "homle", n = 200, p = 10, m = 0.4):
     if type == "homle":
@@ -381,7 +383,7 @@ def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_ne
 # --------------------------------------------------------- #
 #          Initial Solution Enhacned Sorting Testing        #
 # --------------------------------------------------------- #
-def initial_solution_enhanced_testing(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_size, g2_size, max_iter, g1_node_coverage_percentage, g2_node_coverage_percentage, cut_off):
+def initial_solution_enhanced_testing(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_size, g2_size, max_iter, g1_node_coverage_percentage, g2_node_coverage_percentage):
     #--------------------------------------- #
 	#          Iteration starts here         #
 	#--------------------------------------- #
@@ -392,10 +394,10 @@ def initial_solution_enhanced_testing(S, b_g1, b_g2, g1, g2, g1_neighbor_sequenc
         sum_b_g1 = [0.0] * g1_size
         sum_b_g2 = [0.0] * g2_size
         for i in g1.nodes():
-            for nei in g1.neighbors(i):
+            for nei in g1_neighbor_sequence[i]:
                 sum_b_g1[i] += b_g1[nei]
         for u in g2.nodes():
-            for nei in g2.neighbors(u):
+            for nei in g2_neighbor_sequence[u]:
                 sum_b_g2[u] += b_g2[nei]
 
         # -----------------------#
@@ -424,8 +426,6 @@ def initial_solution_enhanced_testing(S, b_g1, b_g2, g1, g2, g1_neighbor_sequenc
                                 g1_is_deleted[j_index] = 1
                                 g2_is_deleted[v_index] = 1
                                 break
-                            elif (S[j][v] == b_g1[j] < b_g2[v]) or (S[j][v] == b_g2[v] < b_g1[j]):
-                                B.append( ((j_index,v_index), S[j][v]) )
                             elif (S[j][v] >= g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) or (S[j][v] >= g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]):
                                 B.append( ((j_index,v_index), S[j][v]) )
 
@@ -455,8 +455,9 @@ def initial_solution_enhanced_testing(S, b_g1, b_g2, g1, g2, g1_neighbor_sequenc
                                     else:
                                         # larger: v, smaller: v
                                         discrepancy = (1 - (pair[1] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) / (b_g1[j] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j])) * g2_node_coverage_percentage[v][num_of_iter] * b_g2[v] + (pair[1] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) / (b_g1[j] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) * b_g2[v]
+                                    #? Should I consider the discrepancy or not? 
+                                    # c += pair[1] 
                                     c += 2 * pair[1] - discrepancy
-                                
                                 g1_is_deleted[j_index] = 1
                                 g2_is_deleted[v_index] = 1
 
@@ -478,7 +479,6 @@ def initial_solution_enhanced_testing(S, b_g1, b_g2, g1, g2, g1_neighbor_sequenc
         b_g2 = b_g2_new
         S = S_new
     return S
-
 
 # ------------------------------------------------- #
 #          Initial Solution Fast Approximation      #
