@@ -12,7 +12,7 @@ import copy
 # ------------------------------------------- Initial Solution -----------------------------------------------#
 
 # probability = [0, 0.001, 0.003, 0.005, 0.007, 0.009, 0.011, 0.013, 0.015]
-probability = [0.001]
+probability = [0.002]
 graph_type = "newman_netscience"
 network_type = 'real_networks'
 
@@ -29,6 +29,22 @@ for p in probability:
 	g1 = nx.read_edgelist(g1_file_name, nodetype = int)
 	g2 = nx.read_edgelist(g2_file_name, nodetype = int)
 	# g2_original = nx.read_edgelist("networks/random_networks/" + graph_type + "/edgelist/" + graph_type + "_" + str(0) +"_g2.edgelist", nodetype = int)
+
+	# ------------------------------------------ #
+	#      Add additional edges on top of g2     #
+	# ------------------------------------------ #
+	# additional_edges = 10
+	# for u in g2.nodes():
+	# 	for v in g2.nodes():
+	# 		random_number = random.uniform(1, 1000)
+	# 		if (u != v) and (int(random_number) <= 1000 * p) and (not g2.has_edge(u, v)) and (additional_edges != 0):
+	# 			g2.add_edge(u,v)
+	# 			print(u, v)
+	# 			additional_edges -= 1
+	# 		elif additional_edges == 0:
+	# 			break
+	# 	if additional_edges == 0:
+	# 		break
 
 	print(nx.info(g1))
 	print(nx.info(g2))
@@ -98,7 +114,7 @@ for p in probability:
 
 	for node in g2.nodes():
 		g2_neighbor_sequence[node] = list(g2.neighbors(node))
-
+	
 	# ------------------------------------------------------- #
 	#         Compute the percentage of node coverage         #
 	# ------------------------------------------------------- #
