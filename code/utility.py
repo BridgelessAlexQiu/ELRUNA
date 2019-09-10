@@ -8,6 +8,8 @@ from collections import defaultdict
 import cProfile
 import matplotlib.pyplot as plt
 import math
+import numba
+from numba import jit
 
 """
     Search Term:
@@ -383,7 +385,8 @@ def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_ne
 # --------------------------------------------------------- #
 #          Initial Solution Enhacned Sorting Testing        #
 # --------------------------------------------------------- #
-def initial_solution_enhanced_testing(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_size, g2_size, max_iter, g1_node_coverage_percentage, g2_node_coverage_percentage):
+# @jit(nopython=True)
+def initial_solution_enhanced_testing(S, b_g1, b_g2, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_size, g2_size, max_iter, g1_node_coverage_percentage, g2_node_coverage_percentage):
     #--------------------------------------- #
 	#          Iteration starts here         #
 	#--------------------------------------- #
@@ -393,10 +396,10 @@ def initial_solution_enhanced_testing(S, b_g1, b_g2, g1, g2, g1_neighbor_sequenc
         #------------------ #
         sum_b_g1 = [0.0] * g1_size
         sum_b_g2 = [0.0] * g2_size
-        for i in g1.nodes():
+        for i in range(g1_size):
             for nei in g1_neighbor_sequence[i]:
                 sum_b_g1[i] += b_g1[nei]
-        for u in g2.nodes():
+        for u in range(g2_size):
             for nei in g2_neighbor_sequence[u]:
                 sum_b_g2[u] += b_g2[nei]
 
@@ -408,8 +411,8 @@ def initial_solution_enhanced_testing(S, b_g1, b_g2, g1, g2, g1_neighbor_sequenc
         S_new = [[None for u in range(g2_size)] for i in range(g1_size)] # the only time we use S_new is assignment, therefore, its initial value doesn't matter
         
         # Iterate over all paris
-        for i in g1.nodes():
-            for u in g2.nodes():
+        for i in range(g1_size):
+            for u in range(g2_size):
                 B = []
                 c = 0 # sum
                 g1_is_deleted = [0] * g1_degree_sequence[i]

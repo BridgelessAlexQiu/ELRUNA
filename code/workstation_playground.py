@@ -9,15 +9,17 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import itertools
 import copy
+import numba
+from numba import jit
 # ------------------------------------------- Initial Solution -----------------------------------------------#
 
-# probability = [0, 0.001, 0.003, 0.005, 0.007, 0.009, 0.011, 0.013, 0.015]
-probability = [0.002]
+probability = [0, 0.01, 0.03, 0.05, 0.07, 0.09, 0.11, 0.13, 0.15, 0.17, 0.19, 0.21, 0.23, 0.25, 0.27, 0.29, 0.31, 0.33, 0.35, 0.37, 0.39, 0.41, 0.43, 0.45]
+# probability = [0.09]
 graph_type = "newman_netscience"
 network_type = 'real_networks'
 
 print('Graph Type: {}'.format(graph_type))
-
+y = []
 for p in probability:
 	print("Probability: {}".format(p))
 	g1_file_name = "networks/" + network_type + "/" + graph_type + "/edgelist/" + graph_type + "_g1.edgelist"
@@ -28,12 +30,11 @@ for p in probability:
 	# ------------------------------------------------ #
 	g1 = nx.read_edgelist(g1_file_name, nodetype = int)
 	g2 = nx.read_edgelist(g2_file_name, nodetype = int)
-	# g2_original = nx.read_edgelist("networks/random_networks/" + graph_type + "/edgelist/" + graph_type + "_" + str(0) +"_g2.edgelist", nodetype = int)
 
 	# ------------------------------------------ #
 	#      Add additional edges on top of g2     #
 	# ------------------------------------------ #
-	# additional_edges = 10
+	# additional_edges = 100
 	# for u in g2.nodes():
 	# 	for v in g2.nodes():
 	# 		random_number = random.uniform(1, 1000)
@@ -183,22 +184,22 @@ for p in probability:
 
 	print("Preprocessing Finished")
 
-	# # --------------------------- #
-	# #     Start the Profiler      #
-	# # --------------------------- #
-	# pr = cProfile.Profile()
-	# pr.enable()
+	# --------------------------- #
+	#     Start the Profiler      #
+	# --------------------------- #
+	pr = cProfile.Profile()
+	pr.enable()
 
 	# --------------- #
 	#  Funciton Call  #
 	# --------------- #
-	S = uti.initial_solution_enhanced_testing(S_ini, b_g1_ini, b_g2_ini, g1, g2, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_size, g2_size, max_iter, g1_node_coverage_percentage, g2_node_coverage_percentage)
+	S = uti.initial_solution_enhanced_testing(S_ini, b_g1_ini, b_g2_ini, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_size, g2_size, max_iter, g1_node_coverage_percentage, g2_node_coverage_percentage)
 
-	# # --------------------------- #
-	# #      End the Profiler       #
-	# # --------------------------- #
-	# pr.disable()
-	# pr.print_stats(sort='time')
+	# --------------------------- #
+	#      End the Profiler       #
+	# --------------------------- #
+	pr.disable()
+	pr.print_stats(sort='time')
 
 	# ------------------------------------------ #
 	#      New Extract the Mapping (Greedy)      #
@@ -251,3 +252,6 @@ for p in probability:
 	ini_ec = mapped_edges / total_edges
 	print("Initial Edge Correctnes: {}".format(ini_ec))
 	print("Initial Objective: {}".format(objective))
+	y.append(ini_ec)
+print(y)
+#[0.9934354485776805, 0.9912472647702407, 0.9879649890590809, 0.986870897155361, 0.9879649890590809, 0.9934354485776805, 0.9857768052516411, 0.9803063457330415, 0.9846827133479212, 0.9857768052516411, 0.936542669584245, 0.9573304157549234, 0.9332603938730853, 0.9485776805251641, 0.8840262582056893, 0.9266958424507659, 0.8468271334792122, 0.811816192560175, 0.7844638949671773, 0.7024070021881839, 0.7166301969365426, 0.6695842450765864, 0.6039387308533917, 0.6083150984682714]
