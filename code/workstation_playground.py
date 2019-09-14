@@ -9,8 +9,6 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import itertools
 import copy
-import numba
-from numba import jit
 # ------------------------------------------- Initial Solution -----------------------------------------------#
 
 # probability = [0, 0.01, 0.03, 0.05, 0.07, 0.09, 0.11, 0.13, 0.15, 0.17, 0.19, 0.21, 0.23, 0.25, 0.27, 0.29, 0.31, 0.33, 0.35, 0.37, 0.39, 0.41, 0.43, 0.45]
@@ -158,6 +156,7 @@ for p in probability:
 			g2_node_coverage_percentage[node].append(cov_percentage)
 			frontier = new_frontier
 
+
 	#########################################################################
 	#                                 MAIN                                  #
 	#########################################################################
@@ -182,7 +181,7 @@ for p in probability:
 				maxi = S_ini[i][u]
 		b_g2_ini[u] = maxi
 
-	print("Preprocessing Finished")
+	# print("Preprocessing Finished")
 
 	# --------------------------- #
 	#     Start the Profiler      #
@@ -210,12 +209,12 @@ for p in probability:
 	g1_selected = [0] * (g1_size)
 	g2_selected = [0] * (g2_size)
 
-	maxi_of_each_vertex = dict() # record the maxi of each vertex
+
 	edge_weight_pairs = [] # format: [((i,u), weight)]
 
 	# ! THIS IS TEMPORARY
 	for i in range(g1_size):
-		for u in range(g1_size):
+		for u in range(g2_size):
 			edge_weight_pairs.append(((i,u), S[i][u]))
 
 	sorted_edge_weight_pairs = sorted(edge_weight_pairs, key=lambda x: x[1], reverse = True)
@@ -252,6 +251,6 @@ for p in probability:
 	ini_ec = mapped_edges / total_edges
 	print("Initial Edge Correctnes: {}".format(ini_ec))
 	print("Initial Objective: {}".format(objective))
-	y.append(ini_ec)
-print(y)
-#[0.9934354485776805, 0.9912472647702407, 0.9879649890590809, 0.986870897155361, 0.9879649890590809, 0.9934354485776805, 0.9857768052516411, 0.9803063457330415, 0.9846827133479212, 0.9857768052516411, 0.936542669584245, 0.9573304157549234, 0.9332603938730853, 0.9485776805251641, 0.8840262582056893, 0.9266958424507659, 0.8468271334792122, 0.811816192560175, 0.7844638949671773, 0.7024070021881839, 0.7166301969365426, 0.6695842450765864, 0.6039387308533917, 0.6083150984682714]
+# 	y.append(ini_ec)
+# print(y)
+# #[0.9934354485776805, 0.9912472647702407, 0.9879649890590809, 0.986870897155361, 0.9879649890590809, 0.9934354485776805, 0.9857768052516411, 0.9803063457330415, 0.9846827133479212, 0.9857768052516411, 0.936542669584245, 0.9573304157549234, 0.9332603938730853, 0.9485776805251641, 0.8840262582056893, 0.9266958424507659, 0.8468271334792122, 0.811816192560175, 0.7844638949671773, 0.7024070021881839, 0.7166301969365426, 0.6695842450765864, 0.6039387308533917, 0.6083150984682714]

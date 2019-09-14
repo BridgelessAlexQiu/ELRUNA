@@ -8,8 +8,6 @@ from collections import defaultdict
 import cProfile
 import matplotlib.pyplot as plt
 import math
-import numba
-from numba import jit
 
 """
     Search Term:
@@ -444,23 +442,20 @@ def initial_solution_enhanced_testing(S, b_g1, b_g2, g1_neighbor_sequence, g2_ne
                             if (not g1_is_deleted[j_index]) and (not g2_is_deleted[v_index]):
                                 j = g1_neighbor_sequence[i][j_index]
                                 v = g2_neighbor_sequence[u][v_index]
-                                discrepancy = 0
-                                if (pair[1] != b_g1[j]) and (pair[1] != b_g2[v]) and (pair[1] >= g1_node_coverage_percentage[j][num_of_iter]*b_g1[j]) and (pair[1] >= g2_node_coverage_percentage[v][num_of_iter]*b_g2[v]):
-                                    c += pair[1]
-                                else:
-                                    if pair[1] == b_g1[j]:
-                                        discrepancy = b_g2[v]
-                                    elif pair[1] == b_g2[v]:
-                                        discrepancy = b_g1[j]
-                                    elif pair[1] < g1_node_coverage_percentage[j][num_of_iter]*b_g1[j]:
-                                        # larger: j, smaller: v
-                                        discrepancy = (1 - (pair[1] - g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]) / (b_g2[v] - g2_node_coverage_percentage[v][num_of_iter] * b_g2[v])) * g1_node_coverage_percentage[j][num_of_iter] * b_g1[j] + (pair[1] - g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]) / (b_g2[v] - g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]) * b_g1[j]
-                                    else:
-                                        # larger: v, smaller: v
-                                        discrepancy = (1 - (pair[1] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) / (b_g1[j] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j])) * g2_node_coverage_percentage[v][num_of_iter] * b_g2[v] + (pair[1] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) / (b_g1[j] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) * b_g2[v]
-                                    #? Should I consider the discrepancy or not? 
-                                    # c += pair[1] 
-                                    c += 2 * pair[1] - discrepancy
+                                discrepancy = pair[1]
+
+                                if pair[1] == b_g1[j]:
+                                    discrepancy = b_g2[v]
+                                elif pair[1] == b_g2[v]:
+                                    discrepancy = b_g1[j]
+                                elif pair[1] < g1_node_coverage_percentage[j][num_of_iter]*b_g1[j]:
+                                    # larger: j, smaller: v
+                                    discrepancy = ( (pair[1] - g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]) / (b_g2[v] - g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]) ) * (b_g1[j] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) + g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]
+                                elif pair[1] < g2_node_coverage_percentage[v][num_of_iter]*b_g2[v]:
+                                    # larger: v, smaller: j
+                                    discrepancy = ( (pair[1] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) / (b_g1[j] - g1_node_coverage_percentage[j][num_of_iter] * b_g1[j]) ) * (b_g2[v] - g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]) + g2_node_coverage_percentage[v][num_of_iter] * b_g2[v]
+                                # c += pair[1] 
+                                c += 2 * pair[1] - discrepancy
                                 g1_is_deleted[j_index] = 1
                                 g2_is_deleted[v_index] = 1
 
