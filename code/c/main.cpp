@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 {
 	char* g1_network_file_name; // name of the first network
 	char* g2_network_file_name; // name of the second network
-	int max_iter;
+	int max_iter; // The diameter of the graph
 
 	// If the number of additional argumnets does not equal to 2
 	if(argc != 4)
@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	
-	// Assign the network files
+	// Assign the network files and the number of iterations
 	g1_network_file_name = argv[1];
 	g2_network_file_name = argv[2];
 	max_iter = atoi(argv[3]);
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 	map<int, list<int>> g1_neighbor_map; // Format: {node : [list of neighbors]} 
 
 	int i, j; // Node i and j
-	while(g1_network_file>>i>>j)
+	while(g1_network_file>>i>>j) // We assume that the nodes are separated by whitespaces
 	{
 		list<int> i_neighbors;
 		// Insert operation checks if the node exists in the map, if so, the element is not inserted
@@ -66,7 +66,6 @@ int main(int argc, char* argv[])
 
 	int** g1_neighbor_sequence = new int*[g1_size]; // Format: [[neighbors of node0], [neighbors of node1] ...]
 	int g1_degree_sequence[g1_size]; // Format: [degree_of_node0, degree_of_node1, ... ]
-
 
 	// ----------------------------------------------------
 	// -                  Assign neighbors                -
@@ -117,7 +116,7 @@ int main(int argc, char* argv[])
 
 		list<int> v_neighbors;
 		// Insert operation checks if the node exists in the map, if so, the element is not inserted
-		g2_neighbor_map.insert(map<int, list<int>>::value_type(u, u_neighbors));
+		g2_neighbor_map.insert(map<int, list<int>>::value_type(v, v_neighbors));
 
 		g2_neighbor_map[u].push_back(v);
 		g2_neighbor_map[v].push_back(u);
@@ -155,6 +154,49 @@ int main(int argc, char* argv[])
 
 	g2_num_of_edges /= 2; // each edges is counted twice
 	g2_network_file.close();
+
+	// ##############################################
+	// #        Output Network Information          #
+	// ##############################################
+	cout<<"G1:"<<endl;
+	cout<<"Number of nodes: "<<g1_size<<endl;
+	cout<<"Number of edges: "<<g1_num_of_edges<<endl;
+
+	cout<<"------------------------------\n";
+	
+	cout<<"G2:"<<endl;
+	cout<<"Number of nodes: "<<g2_size<<endl;
+	cout<<"Number of edges: "<<g2_num_of_edges<<endl;
+	
+	// ########################################################
+	// #             Construct the adjacency matrix           #
+	// ########################################################
+	
+	// ------------------
+	// -       C        -
+	// ------------------
+	int C[g1_size][g1_size] = {{0}}; // the adjacency matrix of g1
+	for(int i = 0; i < g1_size; ++i)
+	{
+		for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
+		{
+			int j = g1_neighbor_sequence[i][j_index];
+			C[i][j] = 1;
+		}
+	}
+
+	// ------------------
+	// -       D        -
+	// ------------------
+	int D[g2_size][g2_size] = {{0}}; // the adjacency matrix of g2
+	for(int u = 0; u < g2_size; ++u)
+	{
+		for(int v_index = 0; v_index < g2_degree_sequence[u]; ++v_index)
+		{
+			int v = g2_neighbor_sequence[u][v_index];
+			D[u][v] = 1;
+		}
+	}
 
 	// #########################################################################
 	// #             Compute the percentage of node converage of g1	           #
@@ -227,8 +269,8 @@ int main(int argc, char* argv[])
 	// ###################################################
 	// #              Compute the initial S              #
 	// ###################################################
-	double S_even[g1_size][g2_size];
-	double S_odd[g1_size][g2_size];
+	double S_even[g1_size][g2_size]; // S_even is used as S at even iteration
+	double S_odd[g1_size][g2_size]; // S_odd is used as S at odd iteration
 	for(int i = 0; i < g1_size; ++i)
 	{
 		for(int u = 0; u < g2_size; ++u)
@@ -292,10 +334,10 @@ int main(int argc, char* argv[])
 			S = S_even;
 			S_new = S_odd;
 		}
-		// -------------------------------------------------------
-		// -        Sum of b value of neighbors  & Threshold     -
-		// -------------------------------------------------------
-		int sum_b_g1[g1_size] = {0};
+		// ---------------------------------------------------------
+		// -        Sum of b value of neighbors & Threshold        -
+		// ---------------------------------------------------------
+		double sum_b_g1[g1_size] = {0.0};
 		double g1_threshold[g1_size];
 		for(int i = 0; i != g1_size; ++i)
 		{
@@ -304,9 +346,10 @@ int main(int argc, char* argv[])
 			{
 				int j = g1_neighbor_sequence[i][j_index];
 				sum_b_g1[i] += b_g1[j];
+
 			}
 		}
-		int sum_b_g2[g2_size] = {0};
+		double sum_b_g2[g2_size] = {0.0};
 		double g2_threshold[g2_size];
 		for(int u = 0; u != g2_size; ++u)
 		{
@@ -401,8 +444,8 @@ int main(int argc, char* argv[])
 								{
 									discrepancy = (similarity - g1_threshold[j]) / (b_g1[j] - g1_threshold[j]) * (b_g2[v] - g2_threshold[v]) + g2_threshold[v];
 								}
-
 								c += 2 * similarity - discrepancy;
+
 								i_neighbor_is_deleted[j_index] = 1;
 								u_neighbor_is_deleted[v_index] = 1;
 							}
@@ -422,7 +465,7 @@ int main(int argc, char* argv[])
 				{
 					S_new[i][u] = c / maxi;
 				}
-				
+
 				// ------------------------------------------
 				// -      Update b value if necessary       -
 				// ------------------------------------------
@@ -449,13 +492,78 @@ int main(int argc, char* argv[])
 		{
 			b_g2[index] = b_g2_new[index];
 		}
-		
 	}
 
 	// #################################################
 	// #           Extract the mapping from S          #
 	// #################################################
 
+	int num_of_pairs = g1_size * g2_size;
+	array<double, 3> edge_weight_pairs[num_of_pairs]; //Format: [[i, u, S_new[i][u]]]
+	int index = 0;
+	for(int i = 0; i < g1_size; ++i)
+	{
+		for(int u = 0; u < g2_size; ++u)
+		{
+			edge_weight_pairs[index][0] = (double)i;
+			edge_weight_pairs[index][1] = (double)u;
+			edge_weight_pairs[index][2] = S_new[i][u];
+			index++;
+		}
+	}
+	sort(edge_weight_pairs, edge_weight_pairs + num_of_pairs, [](const array<double, 3>& a, const array<double, 3>& b) {return a[2] > b[2];});
+	
+	// ------------------------
+	// -       Mapping        -
+	// ------------------------
+	//! HERE WE ASSUME THAT g1_size IS SMALLER, NOTE THAT THIS NEEDS TO BE UPDATED LATER
+	int mapping[g1_size];
+
+	//determine if a vertex has been seleted
+	int g1_selected[g1_size] = {0};
+	int g2_selected[g2_size] = {0};
+
+	for(int index = 0; index < num_of_pairs; ++index)
+	{
+		int i = (int)edge_weight_pairs[index][0];
+		int u = (int)edge_weight_pairs[index][1];
+		if(!g1_selected[i] && !g2_selected[u])
+		{
+			mapping[i] = u;
+			g1_selected[i] = 1;
+			g2_selected[u] = 1;
+		}
+	}
+
+	// ##########################
+	// #      Initial EC        #
+	// ########################## 
+	int mapped_edges = 0;
+	int total_edges = 0;
+	int ini_objective = 0;
+	for(int i = 0; i < g1_size; ++i)
+	{
+		int u = mapping[i];
+		for(int j = 0; j < g1_size; ++j)
+		{
+			int v = mapping[j];
+			ini_objective += C[i][j] * D[u][v];
+			if(C[i][j])
+			{
+				total_edges += 1;
+				if(D[u][v])
+				{
+					mapped_edges += 1;
+				}
+			}
+		}
+	}
+
+	cout<<"------------------------------\n";
+	cout<<"Initial Results:\n";
+	double ini_ec = (double) mapped_edges / (double) total_edges;
+	cout<<"Initial EC: "<<ini_ec<<endl;
+	cout<<"Initial objective: "<<ini_objective<<endl;
 
 	// ############################
 	// #           Free           #

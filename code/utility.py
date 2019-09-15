@@ -377,7 +377,6 @@ def initial_solution_enhanced(S, b_g1, b_g2, g1, g2, g1_neighbor_sequence, g2_ne
         b_g1 = b_g1_new
         b_g2 = b_g2_new
         S = S_new
-
     return S
 
 # --------------------------------------------------------- #
@@ -476,6 +475,10 @@ def initial_solution_enhanced_testing(S, b_g1, b_g2, g1_neighbor_sequence, g2_ne
         b_g1 = b_g1_new
         b_g2 = b_g2_new
         S = S_new
+        # for index in range(g2_size):
+        #     if S_new[100][index] > 0:
+        #         print("{} : {}".format(index, S_new[100][index]))
+        # print(" --------------------------------")
     return S
 
 # ------------------------------------------------- #
@@ -523,6 +526,7 @@ def initial_solution_apprximation(S, b, g1, g2, max_iter):
 		# ------ #
 		b = b_new
 		S = S_new
+        
 	return S
 
 
