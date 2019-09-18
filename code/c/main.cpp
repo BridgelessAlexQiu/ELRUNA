@@ -6,6 +6,7 @@
 #include <vector>
 #include <tuple>
 #include <array>
+#include <string>
 
 using namespace std;
 
@@ -27,6 +28,8 @@ int main(int argc, char* argv[])
 	g2_network_file_name = argv[2];
 	max_iter = atoi(argv[3]);
 
+	cout<<" G1 Construction Begins"<<endl;
+
 	// ########################################################################################
 	// #                                   Construct G1 Begin                                 #
 	// ########################################################################################
@@ -42,14 +45,33 @@ int main(int argc, char* argv[])
 	// -               Read in the graph                    -
 	// ------------------------------------------------------
 	map<int, list<int>> g1_neighbor_map; // Format: {node : [list of neighbors]} 
+	map<string, int> g1_name_id_mapping; // Format: {name : id}
 
-	int i, j; // Node i and j
-	while(g1_network_file>>i>>j) // We assume that the nodes are separated by whitespaces
+	string i_name, j_name; // Node i and j
+	while(g1_network_file>>i_name>>j_name) // We assume that the nodes are separated by whitespaces
 	{
+		// -----------------------------------------------------
+		// -   Assign an id to i (if has not been assigned)    - 
+		// -----------------------------------------------------
+		g1_name_id_mapping.insert(map<string, int>::value_type(i_name, (int)g1_name_id_mapping.size()));
+		int i = g1_name_id_mapping[i_name];
+
+		// --------------------------------------------------------------------------
+		// -       Create spaces for i's neighbors (if has not been created)        -
+		// --------------------------------------------------------------------------
 		list<int> i_neighbors;
 		// Insert operation checks if the node exists in the map, if so, the element is not inserted
 		g1_neighbor_map.insert(map<int, list<int>>::value_type(i, i_neighbors));
 
+		// -----------------------------------------------------
+		// -   Assign an id to j (if has not been assigned)    - 
+		// -----------------------------------------------------
+		g1_name_id_mapping.insert(map<string, int>::value_type(j_name, (int)g1_name_id_mapping.size()));
+		int j = g1_name_id_mapping[j_name];
+
+		// --------------------------------------------------------------------------
+		// -       Create spaces for j's neighbors (if has not been created)        -
+		// --------------------------------------------------------------------------
 		list<int> j_neighbors;
 		// Insert operation checks if the node exists in the map, if so, the element is not inserted
 		g1_neighbor_map.insert(map<int, list<int>>::value_type(j, j_neighbors));
@@ -80,17 +102,19 @@ int main(int argc, char* argv[])
 		g1_neighbor_sequence[i] = new int[g1_degree_sequence[i]];
 		g1_num_of_edges += g1_degree_sequence[i];
 
-		int j = 0;
+		int j_index = 0;
 		for (auto list_it = neighbors.begin(); list_it != neighbors.end(); ++list_it)
 		{
-			g1_neighbor_sequence[i][j] = *list_it;	
-			j++;
+			g1_neighbor_sequence[i][j_index] = *list_it;	
+			j_index++;
 		}
 	}
 
 	g1_num_of_edges /= 2; // each edges is counted twice
 	g1_network_file.close();
 
+	cout<<" G1 Construction Ends"<<endl;
+	cout<<" G2 Construction Begins"<<endl;
 	// ########################################################################################
 	// #                                   Construct G2 Begin                                 #
 	// ########################################################################################
@@ -106,13 +130,26 @@ int main(int argc, char* argv[])
 	// -               Read in the graph                    -
 	// ------------------------------------------------------
 	map<int, list<int>> g2_neighbor_map; // Format: {node : [list of neighbors]} 
+	map<string, int> g2_name_id_mapping; // Format: {name : id}
 
-	int u, v; // Node i and j
-	while(g2_network_file>>u>>v)
+	string u_name, v_name; // Node u and v
+	while(g2_network_file>>u_name>>v_name)
 	{
+		// -----------------------------------------------------
+		// -   Assign an id to u (if has not been assigned)    - 
+		// -----------------------------------------------------
+		g2_name_id_mapping.insert(map<string, int>::value_type(u_name, (int)g2_name_id_mapping.size()));
+		int u = g2_name_id_mapping[u_name];
+
 		list<int> u_neighbors;
 		// Insert operation checks if the node exists in the map, if so, the element is not inserted
 		g2_neighbor_map.insert(map<int, list<int>>::value_type(u, u_neighbors));
+
+		// -----------------------------------------------------
+		// -   Assign an id to v (if has not been assigned)    - 
+		// -----------------------------------------------------
+		g2_name_id_mapping.insert(map<string, int>::value_type(v_name, (int)g2_name_id_mapping.size()));
+		int v = g2_name_id_mapping[v_name];
 
 		list<int> v_neighbors;
 		// Insert operation checks if the node exists in the map, if so, the element is not inserted
@@ -144,16 +181,19 @@ int main(int argc, char* argv[])
 		g2_neighbor_sequence[u] = new int[g2_degree_sequence[u]];
 		g2_num_of_edges += g2_degree_sequence[u];
 
-		int v = 0;
+		int v_index = 0;
 		for (auto list_it = neighbors.begin(); list_it != neighbors.end(); ++list_it)
 		{
-			g2_neighbor_sequence[u][v] = *list_it;	
-			v++;
+			g2_neighbor_sequence[u][v_index] = *list_it;	
+			v_index++;
 		}
 	}
 
 	g2_num_of_edges /= 2; // each edges is counted twice
 	g2_network_file.close();
+
+	cout<<" G2 Construction Ends"<<endl;
+	cout<<" ----------------------- "<<endl;
 
 	// ##############################################
 	// #        Output Network Information          #
@@ -168,36 +208,6 @@ int main(int argc, char* argv[])
 	cout<<"Number of nodes: "<<g2_size<<endl;
 	cout<<"Number of edges: "<<g2_num_of_edges<<endl;
 	
-	// ########################################################
-	// #             Construct the adjacency matrix           #
-	// ########################################################
-	
-	// ------------------
-	// -       C        -
-	// ------------------
-	int C[g1_size][g1_size] = {{0}}; // the adjacency matrix of g1
-	for(int i = 0; i < g1_size; ++i)
-	{
-		for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
-		{
-			int j = g1_neighbor_sequence[i][j_index];
-			C[i][j] = 1;
-		}
-	}
-
-	// ------------------
-	// -       D        -
-	// ------------------
-	int D[g2_size][g2_size] = {{0}}; // the adjacency matrix of g2
-	for(int u = 0; u < g2_size; ++u)
-	{
-		for(int v_index = 0; v_index < g2_degree_sequence[u]; ++v_index)
-		{
-			int v = g2_neighbor_sequence[u][v_index];
-			D[u][v] = 1;
-		}
-	}
-
 	// #########################################################################
 	// #             Compute the percentage of node converage of g1	           #
 	// #########################################################################
@@ -268,9 +278,18 @@ int main(int argc, char* argv[])
 
 	// ###################################################
 	// #              Compute the initial S              #
-	// ###################################################
-	double S_even[g1_size][g2_size]; // S_even is used as S at even iteration
-	double S_odd[g1_size][g2_size]; // S_odd is used as S at odd iteration
+	// ################################################### 
+	double** S_even = new double*[g1_size]; // S_even is used as S at even iteration
+	for(int i = 0; i < g1_size; ++i)
+	{
+		S_even[i] = new double[g2_size];
+	}
+	double** S_odd = new double*[g1_size]; // S_odd is used as S at odd iteration
+	for(int i = 0; i < g1_size; ++i)
+	{
+		S_odd[i] = new double[g2_size];
+	}
+
 	for(int i = 0; i < g1_size; ++i)
 	{
 		for(int u = 0; u < g2_size; ++u)
@@ -316,11 +335,11 @@ int main(int argc, char* argv[])
 	// #################################################
 	// Variables: g1_size, g2_size, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_node_coverage_percentage, g2_node_coverage_percentage, S, b_g1, b_g2, max_iter
 	
-	double (*S)[g2_size];
-	double (*S_new)[g2_size];
-
+	double** S;
+	double** S_new;
 	for(int num_of_iter = 0; num_of_iter != max_iter; ++num_of_iter)
 	{
+		cout<<"Iteration: "<<num_of_iter<<endl;
 		// -----------------------
 		// -      Update S       -
 		// -----------------------
@@ -497,13 +516,13 @@ int main(int argc, char* argv[])
 	// #################################################
 	// #           Extract the mapping from S          #
 	// #################################################
-
 	int num_of_pairs = g1_size * g2_size;
-	array<double, 3> edge_weight_pairs[num_of_pairs]; //Format: [[i, u, S_new[i][u]]]
+	vector<array<double, 3>> edge_weight_pairs(num_of_pairs); 
+	// array<double, 3> edge_weight_pairs[num_of_pairs]; //Format: [[i, u, S_new[i][u]]]
 	int index = 0;
 	for(int i = 0; i < g1_size; ++i)
 	{
-		for(int u = 0; u < g2_size; ++u)
+		for(int u = g2_size - 1; u >= 0; --u)
 		{
 			edge_weight_pairs[index][0] = (double)i;
 			edge_weight_pairs[index][1] = (double)u;
@@ -511,7 +530,7 @@ int main(int argc, char* argv[])
 			index++;
 		}
 	}
-	sort(edge_weight_pairs, edge_weight_pairs + num_of_pairs, [](const array<double, 3>& a, const array<double, 3>& b) {return a[2] > b[2];});
+	sort(edge_weight_pairs.begin(), edge_weight_pairs.end(), [](const array<double, 3>& a, const array<double, 3>& b) {return a[2] > b[2];});
 	
 	// ------------------------
 	// -       Mapping        -
@@ -534,26 +553,25 @@ int main(int argc, char* argv[])
 			g2_selected[u] = 1;
 		}
 	}
-
+	
 	// ##########################
 	// #      Initial EC        #
-	// ########################## 
+	// ##########################
 	int mapped_edges = 0;
-	int total_edges = 0;
-	int ini_objective = 0;
 	for(int i = 0; i < g1_size; ++i)
 	{
 		int u = mapping[i];
-		for(int j = 0; j < g1_size; ++j)
+		for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
 		{
+			int j = g1_neighbor_sequence[i][j_index];
 			int v = mapping[j];
-			ini_objective += C[i][j] * D[u][v];
-			if(C[i][j])
+			for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[u]; ++u_nei_index)
 			{
-				total_edges += 1;
-				if(D[u][v])
+				int u_nei = g2_neighbor_sequence[u][u_nei_index];
+				if(v == u_nei)
 				{
 					mapped_edges += 1;
+					break;
 				}
 			}
 		}
@@ -561,15 +579,36 @@ int main(int argc, char* argv[])
 
 	cout<<"------------------------------\n";
 	cout<<"Initial Results:\n";
-	double ini_ec = (double) mapped_edges / (double) total_edges;
+	double ini_ec = (double) mapped_edges / (double) (2 * g1_num_of_edges);
 	cout<<"Initial EC: "<<ini_ec<<endl;
-	cout<<"Initial objective: "<<ini_objective<<endl;
+	cout<<"Initial objective: "<<mapped_edges<<endl;
 
 	// ############################
 	// #           Free           #
 	// ############################
+	for(int i = 0; i < g1_size; ++i)
+	{
+		delete[] g1_neighbor_sequence[i];
+	}
 	delete[] g1_neighbor_sequence;
+
+	for(int u = 0; u < g2_size; ++u)
+	{
+		delete[] g2_neighbor_sequence[u];
+	}
 	delete[] g2_neighbor_sequence;
+
+	for(int i = 0; i < g2_size; ++i)
+	{
+		delete[] S_even[i];
+	}
+	delete[] S_even;
+
+	for(int i = 0; i < g2_size; ++i)
+	{
+		delete[] S_odd[i];
+	}
+	delete[] S_odd;
 
 	return 0;
 }
