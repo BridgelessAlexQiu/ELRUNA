@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <numeric>
 #include <map>
 #include <list>
 #include <algorithm> 
@@ -334,9 +335,15 @@ int main(int argc, char* argv[])
 	// #              Initial Solution	               #
 	// #################################################
 	// Variables: g1_size, g2_size, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_node_coverage_percentage, g2_node_coverage_percentage, S, b_g1, b_g2, max_iter
-	
+
+	int* num_of_best_matching = new int[g1_size]; // [num_of_best_matchings_for_node_1, ...]
+	for(int index = 0; index < g1_size; ++index)
+	{
+		num_of_best_matching[index] = 0;
+	}
 	double** S;
 	double** S_new;
+
 	for(int num_of_iter = 0; num_of_iter != max_iter; ++num_of_iter)
 	{
 		cout<<"Iteration: "<<num_of_iter<<endl;
@@ -485,6 +492,21 @@ int main(int argc, char* argv[])
 					S_new[i][u] = c / maxi;
 				}
 
+				// -------------------------------------------------------------
+				//       Update the number of best mapping if necessary        -
+				// -------------------------------------------------------------
+				if(num_of_iter == max_iter - 1) //If we are at the final iteration
+				{
+					if(S_new[i][u] > b_g1_new[i])
+					{
+						num_of_best_matching[i] = 1;
+					}
+					else if(S_new[i][u] == b_g1_new[i])
+					{
+						num_of_best_matching[i] += 1;
+					}
+				}
+
 				// ------------------------------------------
 				// -      Update b value if necessary       -
 				// ------------------------------------------
@@ -512,35 +534,59 @@ int main(int argc, char* argv[])
 			b_g2[index] = b_g2_new[index];
 		}
 	}
-
-	// #################################################
-	// #           Extract the mapping from S          #
-	// #################################################
-	int num_of_pairs = g1_size * g2_size;
-	vector<array<double, 3>> edge_weight_pairs(num_of_pairs); 
-	// array<double, 3> edge_weight_pairs[num_of_pairs]; //Format: [[i, u, S_new[i][u]]]
-	int index = 0;
-	for(int i = 0; i < g1_size; ++i)
-	{
-		for(int u = g2_size - 1; u >= 0; --u)
-		{
-			edge_weight_pairs[index][0] = (double)i;
-			edge_weight_pairs[index][1] = (double)u;
-			edge_weight_pairs[index][2] = S_new[i][u];
-			index++;
-		}
-	}
-	sort(edge_weight_pairs.begin(), edge_weight_pairs.end(), [](const array<double, 3>& a, const array<double, 3>& b) {return a[2] > b[2];});
 	
-	// ------------------------
-	// -       Mapping        -
-	// ------------------------
-	//! HERE WE ASSUME THAT g1_size IS SMALLER, NOTE THAT THIS NEEDS TO BE UPDATED LATER
-	int mapping[g1_size];
-
+	// #############################################
+	// #       Another way to do the mapping       #
+	// #############################################
+	vector<int> single; // contain vertices with only one best matching
+	vector<int> multiple; // contain vertices with more than one best matching
 	//determine if a vertex has been seleted
 	int g1_selected[g1_size] = {0};
 	int g2_selected[g2_size] = {0};
+
+	// -----------------------------------------
+	// -        "single" and "multiple"        -
+	// -----------------------------------------
+	for(int i = 0; i < g1_size; ++i)
+	{
+		if(num_of_best_matching[i] == 1)
+		{
+			single.push_back(i);
+		}
+		else
+		{
+			multiple.push_back(i);
+		}
+	}
+
+	// ------------------------------
+	// -         Push paris         -
+	// ------------------------------
+	int num_of_pairs = single.size() * g2_size;
+	vector<array<double, 3>> edge_weight_pairs(num_of_pairs);
+	int pair_index = 0;
+	for(int i_index = 0; i_index < single.size(); ++i_index)
+	{
+		int i = single[i_index];
+		for(int u = g2_size - 1; u >= 0; --u)
+		{
+			edge_weight_pairs[pair_index][0] = (double)i;
+			edge_weight_pairs[pair_index][1] = (double)u;
+			edge_weight_pairs[pair_index][2] = S_new[i][u];
+			pair_index++;
+		}
+	}
+
+	// -----------------
+	//     Sorting     -
+	// -----------------
+	sort(edge_weight_pairs.begin(), edge_weight_pairs.end(), [](const array<double, 3>& a, const array<double, 3>& b) {return a[2] > b[2];});
+
+	// ---------------------------------
+	// -     Map "single" vertices     -
+	// ---------------------------------
+	//! HERE WE ASSUME THAT g1_size IS SMALLER, NOTE THAT THIS NEEDS TO BE UPDATED LATER
+	int mapping[g1_size];
 
 	for(int index = 0; index < num_of_pairs; ++index)
 	{
@@ -553,9 +599,128 @@ int main(int argc, char* argv[])
 			g2_selected[u] = 1;
 		}
 	}
+
+	// ---------------------------------------------
+	// -     Sort "multiple" nodes by b-value      -
+	// ---------------------------------------------
+	vector<array<double, 2>> b_value_of_multiple(multiple.size());
+	for(int index = 0; index < multiple.size(); ++index)
+	{
+		b_value_of_multiple[index][0] = (double) multiple[index];
+		b_value_of_multiple[index][1] = b_g1[multiple[index]];
+	}
+
+	sort(b_value_of_multiple.begin(), b_value_of_multiple.end(), [](const array<double, 2>& a, const array<double, 2>& b) {return a[1] > b[1];});
+
+	// ---------------------------------
+	// -     Map "single" vertices     -
+	// ---------------------------------
+	for(int i_index = 0; i_index < b_value_of_multiple.size(); ++i_index)
+	{
+		int i = (int) b_value_of_multiple[i_index][0];
+		if(!g1_selected[i])
+		{
+			int max_vertex = 0;
+			double max_similarity = -0.5;
+			for(int u = 0; u < g2_size; ++u)
+			{
+				if(!g2_selected[u] && S_new[i][u] > max_similarity)
+				{
+					max_vertex = u;
+					max_similarity = S_new[i][u];
+				}
+			}
+			mapping[i] = max_vertex;
+			g1_selected[i];
+			g2_selected[max_vertex];
+
+			vector<array<int, 2>> frointer; //[[i_1, u_1], [i_2, u_2], ..., [i_n, u_n]]
+			frointer.push_back({i, max_vertex});
+			while(!frointer.empty())
+			{
+				int j = frointer[frointer.size()-1][0];
+				int v = frointer[frointer.size()-1][1];
+				frointer.pop_back();
+
+				for(int j_nei_index = 0; j_nei_index < g1_degree_sequence[j]; ++j_nei_index)
+				{
+					int j_nei = g1_neighbor_sequence[j][j_nei_index];
+					if(!g1_selected[j_nei])
+					{
+						int max_vertex_inner = 0;
+						double max_similarity_inner = -0.5;
+						
+						for(int v_nei_index = 0; v_nei_index < g2_degree_sequence[v]; ++v_nei_index)
+						{
+							int v_nei = g2_neighbor_sequence[v][v_nei_index];
+							if(!g2_selected[v_nei] && S_new[j_nei][v_nei] > max_similarity_inner)
+							{
+								max_vertex_inner = v_nei;
+								max_similarity_inner = S_new[j_nei][v_nei];
+							}
+						}
+
+						for(int u = 0; u < g2_size; ++u)
+						{
+							if(!g2_selected[u] && S_new[j_nei][u] > max_similarity_inner)
+							{
+								max_vertex_inner = u;
+								max_similarity_inner = S_new[j_nei][u];
+							}
+						}
+
+						mapping[j_nei] = max_vertex_inner;
+						g1_selected[j_nei] = 1;
+						g2_selected[max_vertex_inner] = 1;
+						frointer.push_back({j_nei, max_vertex_inner});
+					}
+				}
+			}
+		}
+	}
+	// // #################################################
+	// // #           Extract the mapping from S          #
+	// // #################################################
+	// int num_of_pairs = g1_size * g2_size;
+	// vector<array<double, 3>> edge_weight_pairs(num_of_pairs); 
+
+	// int index = 0;
+	// for(int i = 0; i < g1_size; ++i)
+	// {
+	// 	for(int u = g2_size - 1; u >= 0; --u)
+	// 	{
+	// 		edge_weight_pairs[index][0] = (double)i;
+	// 		edge_weight_pairs[index][1] = (double)u;
+	// 		edge_weight_pairs[index][2] = S_new[i][u];
+	// 		index++;
+	// 	}
+	// }
+	// sort(edge_weight_pairs.begin(), edge_weight_pairs.end(), [](const array<double, 3>& a, const array<double, 3>& b) {return a[2] > b[2];});
+	
+	// // ------------------------
+	// // -       Mapping        -
+	// // ------------------------
+	// //! HERE WE ASSUME THAT g1_size IS SMALLER, NOTE THAT THIS NEEDS TO BE UPDATED LATER
+	// int mapping[g1_size];
+
+	// //determine if a vertex has been seleted
+	// int g1_selected[g1_size] = {0};
+	// int g2_selected[g2_size] = {0};
+
+	// for(int index = 0; index < num_of_pairs; ++index)
+	// {
+	// 	int i = (int)edge_weight_pairs[index][0];
+	// 	int u = (int)edge_weight_pairs[index][1];
+	// 	if(!g1_selected[i] && !g2_selected[u])
+	// 	{
+	// 		mapping[i] = u;
+	// 		g1_selected[i] = 1;
+	// 		g2_selected[u] = 1;
+	// 	}
+	// }
 	
 	// ##########################
-	// #      Initial EC        #
+	// #       Initial EC       #
 	// ##########################
 	int mapped_edges = 0;
 	for(int i = 0; i < g1_size; ++i)
@@ -609,6 +774,8 @@ int main(int argc, char* argv[])
 		delete[] S_odd[i];
 	}
 	delete[] S_odd;
+
+	delete[] num_of_best_matching;
 
 	return 0;
 }
