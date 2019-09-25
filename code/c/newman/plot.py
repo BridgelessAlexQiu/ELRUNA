@@ -3,10 +3,13 @@ import matplotlib.pyplot as plt
 x = [0, 0.01, 0.03, 0.05, 0.07, 0.09, 0.11, 0.13, 0.15, 0.17, 0.19, 0.21, 0.23, 0.25]
 y_mine = [0.991247, 0.993435, 0.987965, 0.989059, 0.990153, 0.99453, 0.986871, 0.99453, 0.991247, 0.983589, 0.942013, 0.946389, 0.940919, 0.935449]
 y_netal = [1, 0.967177, 0.992341, 0.982495, 0.99453, 0.962801, 0.921225, 0.835886, 0.954048, 0.868709, 0.859956, 0.917943, 0.88512, 0.81291]
+
 plt.xlabel("Noise level")
 plt.ylabel("EC")
 plt.ylim((0, 1.1))
+plt.title("Coauthor Networks, n = 374, m = 914")
 
-plt.scatter(x, y_mine)
-plt.scatter(x, y_netal)
+plt.plot(x, y_mine, 'o--', label='Our')
+plt.plot(x, y_netal, 'o--', label='NETAL')
+plt.legend()
 plt.show()

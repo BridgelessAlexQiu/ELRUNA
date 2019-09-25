@@ -7,7 +7,9 @@ y_netal = [1, 0.991538, 0.960769, 0.899231, 0.892308, 0.865385, 0.87, 0.815385, 
 plt.xlabel("Noise level")
 plt.ylabel("EC")
 plt.ylim((0, 1.1))
+plt.title("Gene functional associations networks, n = 1.4k, m = 1.6k")
 
-plt.scatter(x, y_mine)
-plt.scatter(x, y_netal)
+plt.plot(x, y_mine, 'o--', label='Our')
+plt.plot(x, y_netal, 'o--', label='NETAL')
+plt.legend()
 plt.show()

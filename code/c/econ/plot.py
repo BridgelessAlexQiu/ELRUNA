@@ -8,6 +8,10 @@ plt.xlabel("Noise level")
 plt.ylabel("EC")
 plt.ylim((0, 1.1))
 
-plt.scatter(x, y_mine)
-plt.scatter(x, y_netal)
+plt.title(" Economic network, n = 1.3k, m = 7.6k")
+
+plt.plot(x, y_mine, 'o--', label='Our')
+plt.plot(x, y_netal, 'o--', label='NETAL')
+plt.legend()
+
 plt.show()
