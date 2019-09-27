@@ -11,6 +11,8 @@
 
 using namespace std;
 
+bool float_equal(double d1, double d2);
+
 // arg list: g1.edges g2.edges max_iter [flag]
 int main(int argc, char* argv[])
 {
@@ -359,7 +361,12 @@ int main(int argc, char* argv[])
 		// ---------------------------------------------------------
 		// -        Sum of b value of neighbors & Threshold        -
 		// ---------------------------------------------------------
-		double sum_b_g1[g1_size] = {0.0};
+		double sum_b_g1[g1_size];
+		for(int i = 0; i < g1_size; ++i)
+		{
+			sum_b_g1[i] = 0.0;
+		}
+
 		double g1_threshold[g1_size];
 		for(int i = 0; i != g1_size; ++i)
 		{
@@ -371,7 +378,12 @@ int main(int argc, char* argv[])
 
 			}
 		}
-		double sum_b_g2[g2_size] = {0.0};
+		double sum_b_g2[g2_size];
+		for(int u = 0; u < g2_size; ++u)
+		{
+			sum_b_g2[u] = 0.0;
+		}
+
 		double g2_threshold[g2_size];
 		for(int u = 0; u != g2_size; ++u)
 		{
@@ -387,7 +399,15 @@ int main(int argc, char* argv[])
 		// -      New b        -
 		// ---------------------
 		double b_g1_new[g1_size] = {0.0};
+		for(int i = 0; i < g1_size; ++i)
+		{
+			b_g1_new[i] = 0.0;
+		}
 		double b_g2_new[g2_size] = {0.0};
+		for(int u = 0; u < g2_size; ++u)
+		{
+			b_g2_new[u] = 0.0;
+		}
 
 		// ------------------------------------------
 		// -      Loop over all pairs of nodes      -
@@ -413,9 +433,13 @@ int main(int argc, char* argv[])
 					{
 						if(!u_neighbor_is_deleted[v_index])
 						{
-							int v = g2_neighbor_sequence[u][v_index];
-							if(S[j][v] == b_g1[j] == b_g2[v])
+							int v = g2_neighbor_sequence[u][v_index]; 
+							if(float_equal(S[j][v], b_g1[j]) && float_equal(b_g1[j], b_g2[v]))
 							{
+								if(S[j][v] < 0)
+								{
+									cout<<S[j][v]<<" "<<b_g1[j]<<endl;
+								}
 								c += S[j][v];
 								i_neighbor_is_deleted[j_index] = 1;
 								u_neighbor_is_deleted[v_index] = 1;
@@ -450,11 +474,11 @@ int main(int argc, char* argv[])
 								double similarity = B[index][2];
 								double discrepancy = similarity;
 
-								if(similarity == b_g1[j])
+								if(float_equal(similarity, b_g1[j]))
 								{
 									discrepancy = b_g2[v];
 								}						
-								else if(similarity == b_g2[v])
+								else if(float_equal(similarity, b_g2[v]))
 								{
 									discrepancy = b_g1[j];
 								}	
@@ -467,7 +491,6 @@ int main(int argc, char* argv[])
 									discrepancy = (similarity - g1_threshold[j]) / (b_g1[j] - g1_threshold[j]) * (b_g2[v] - g2_threshold[v]) + g2_threshold[v];
 								}
 								c += 2 * similarity - discrepancy;
-
 								i_neighbor_is_deleted[j_index] = 1;
 								u_neighbor_is_deleted[v_index] = 1;
 							}
@@ -479,13 +502,15 @@ int main(int argc, char* argv[])
 				// -      Compute new Similarity      -
 				// ------------------------------------
 				double maxi = max(sum_b_g1[i], sum_b_g2[u]);
-				if(maxi == 0)
+
+				if(float_equal(maxi, 0.0)) // if(maxi <= 0.0 || c <= 0.0)
 				{
 					S_new[i][u] = 0.0;
 				}
 				else
 				{
 					S_new[i][u] = c / maxi;
+					if(S_new[i][u] < -1) cout<<S_new[i][u]<<endl;
 				}
 
 				// ------------------------------------------
@@ -515,7 +540,7 @@ int main(int argc, char* argv[])
 			b_g2[index] = b_g2_new[index];
 		}
 	}
-	
+
 	//! HERE WE ASSUME THAT g1_size IS SMALLER, NOTE THAT THIS NEEDS TO BE UPDATED LATER
 	int mapping[g1_size];
 	// determine if a vertex has been seleted
@@ -568,7 +593,7 @@ int main(int argc, char* argv[])
 
 		while(num_of_aligned_node != g1_size)
 		{
-			double max_similarity = -0.5;
+			double max_similarity = -10000.0;
 			int max_i;
 			int max_u;
 			for(int i = 0; i < g1_size; ++i)
@@ -604,14 +629,14 @@ int main(int argc, char* argv[])
 						int u_nei = g2_neighbor_sequence[max_u][u_nei_index];
 						if(!g2_selected[u_nei])
 						{
-							S_new[i_nei][u_nei] += 0.7;
+							S_new[i_nei][u_nei] += 1;
 						}
 					}
 				}
 			}
 		}
 	}
-	
+
 	// ##########################
 	// #       Initial EC       #
 	// ##########################
@@ -634,7 +659,7 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
-
+	
 	cout<<"------------------------------\n";
 	cout<<"Initial Results:\n";
 	double ini_ec = (double) mapped_edges / (double) (2 * g1_num_of_edges);
@@ -669,4 +694,9 @@ int main(int argc, char* argv[])
 	delete[] S_odd;
 
 	return 0;
+}
+
+bool float_equal(double d1, double d2)
+{
+	return ((fabs(d1 - d2) <= std::numeric_limits<double>::epsilon()));
 }
