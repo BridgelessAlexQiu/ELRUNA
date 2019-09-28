@@ -1,13 +1,28 @@
 #include<iostream>
+#include<vector>
 
 using namespace std;
 
 int main()
 {
-	double d1 = 0.75;
-	d1 = d1 + 1;
-	double d2 = 0.36;
-	cout<<(d1 / d2)<<endl;
+	// vector<int> v(1000000);
+
+	// for(int i = 0; i < 50000; ++i)
+	// {
+	// 	v[i] = i;
+	// }
+
+	// v.resize(50000);
+
+	//or
+	
+	vector<int> v;
+	v.reserve(1000000);
+	for(int i = 0; i < 50000; ++i)
+	{
+		v.push_back(i);
+	}
+	v.shrink_to_fit();
 
 	return 0;
 }

@@ -416,7 +416,9 @@ int main(int argc, char* argv[])
 		{
 			for(int u = 0; u < g2_size; ++u)
 			{
-				vector<array<double, 3>> B;
+				int reserved_size = g1_degree_sequence[i] * g2_degree_sequence[u];
+				int total_pairs_in_B = 0;
+				vector<array<double, 3>> B (reserved_size);
 				double c = 0.0; // sum of similarity
 
 				// i_neighbor_is_deleted[n] = 1 if the nth neighbor of i is deleted
@@ -436,7 +438,7 @@ int main(int argc, char* argv[])
 							int v = g2_neighbor_sequence[u][v_index]; 
 							if(float_equal(S[j][v], b_g1[j]) && float_equal(b_g1[j], b_g2[v]))
 							{
-								if(S[j][v] < 0)
+								if(S[j][v] < 0) // this should never happen
 								{
 									cout<<S[j][v]<<" "<<b_g1[j]<<endl;
 								}
@@ -447,11 +449,14 @@ int main(int argc, char* argv[])
 							}
 							else if(S[j][v] >= g1_threshold[j] || S[j][v] >= g2_threshold[v])
 							{
-								B.push_back( {(double)j_index, (double)v_index, S[j][v]} );
+								B[total_pairs_in_B] = {(double)j_index, (double)v_index, S[j][v]};
+								total_pairs_in_B += 1;
 							}
 						}
 					}
 				}
+				B.resize(total_pairs_in_B);	
+			
 				// ----------------------------------------------------------------
 				// -            Sort B by weight (the third element)              -
 				// ----------------------------------------------------------------
