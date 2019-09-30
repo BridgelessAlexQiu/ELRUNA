@@ -1,28 +1,20 @@
 #include<iostream>
 #include<vector>
+#include<map>
+#include "eigen/Eigen/SparseCore"
 
+typedef Eigen::Triplet<double> T;
 using namespace std;
 
 int main()
 {
-	// vector<int> v(1000000);
-
-	// for(int i = 0; i < 50000; ++i)
-	// {
-	// 	v[i] = i;
-	// }
-
-	// v.resize(50000);
-
-	//or
-	
-	vector<int> v;
-	v.reserve(1000000);
-	for(int i = 0; i < 50000; ++i)
-	{
-		v.push_back(i);
-	}
-	v.shrink_to_fit();
-
+	Eigen::Matrix<int, 3, 1> M;
+	M[0] = 10;
+	Eigen::Matrix<int, 3, 1> N;
+	N = M;
+	cout<<N[0]<<endl;
+	N[0] = 20;
+	cout<<M[0]<<endl;
+	cout<<N[0]<<endl;
 	return 0;
 }
