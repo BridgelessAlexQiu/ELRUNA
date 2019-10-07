@@ -556,319 +556,346 @@ int main(int argc, char* argv[])
 	}
 
 	//! HERE WE ASSUME THAT g1_size IS SMALLER, NOTE THAT THIS NEEDS TO BE UPDATED LATER
-	int mapping[g1_size];
-	map<int, int> inverse_mapping;
+	int mapping_naive[g1_size];
+	int mapping_seed[g1_size];
+
+	map<int, int> inverse_mapping_naive;
+	map<int, int> inverse_mapping_seed;
 
 	// determine if a vertex has been seleted
-	int g1_selected[g1_size] = {0};
-	int g2_selected[g2_size] = {0};
+	int g1_selected_naive[g1_size] = {0};
+	int g2_selected_naive[g2_size] = {0};
 
-	if(use_default_alignment_method)
+	int g1_selected_seed[g1_size] = {0};
+	int g2_selected_seed[g2_size] = {0};
+
+	// if(use_default_alignment_method)
+	// {
+	// #########################################
+	// #           Alignment method 1          #
+	// #########################################
+	int num_of_pairs = g1_size * g2_size;
+	vector<array<double, 3>> edge_weight_pairs(num_of_pairs); 
+
+	int index = 0;
+	for(int i = 0; i < g1_size; ++i)
 	{
-		// #########################################
-		// #           Alignment method 1          #
-		// #########################################
-		int num_of_pairs = g1_size * g2_size;
-		vector<array<double, 3>> edge_weight_pairs(num_of_pairs); 
+		for(int u = g2_size - 1; u >= 0; --u)
+		{
+			edge_weight_pairs[index][0] = (double)i;
+			edge_weight_pairs[index][1] = (double)u;
+			edge_weight_pairs[index][2] = S_new[i][u];
+			index++;
+		}
+	}
+	sort(edge_weight_pairs.begin(), edge_weight_pairs.end(), [](const array<double, 3>& a, const array<double, 3>& b) {return a[2] > b[2];});
+	
+	// ------------------------
+	// -       Mapping        -
+	// ------------------------
+	for(int index = 0; index < num_of_pairs; ++index)
+	{
+		int i = (int)edge_weight_pairs[index][0];
+		int u = (int)edge_weight_pairs[index][1];
+		if(!g1_selected_naive[i] && !g2_selected_naive[u])
+		{
+			mapping_naive[i] = u;
+			inverse_mapping_naive[u] = i;
+			g1_selected_naive[i] = 1;
+			g2_selected_naive[u] = 1;
+		}
+	}
+	//}
 
-		int index = 0;
+	// else
+	// {
+	// ############################################
+	// #            Alignment method 2            #
+	// ############################################
+	int num_of_aligned_node = 0;
+
+	while(num_of_aligned_node != g1_size)
+	{
+		double max_similarity = -10000.0;
+		int max_i;
+		int max_u;
 		for(int i = 0; i < g1_size; ++i)
 		{
-			for(int u = g2_size - 1; u >= 0; --u)
+			if(!g1_selected_seed[i])
 			{
-				edge_weight_pairs[index][0] = (double)i;
-				edge_weight_pairs[index][1] = (double)u;
-				edge_weight_pairs[index][2] = S_new[i][u];
-				index++;
-			}
-		}
-		sort(edge_weight_pairs.begin(), edge_weight_pairs.end(), [](const array<double, 3>& a, const array<double, 3>& b) {return a[2] > b[2];});
-		
-		// ------------------------
-		// -       Mapping        -
-		// ------------------------
-		for(int index = 0; index < num_of_pairs; ++index)
-		{
-			int i = (int)edge_weight_pairs[index][0];
-			int u = (int)edge_weight_pairs[index][1];
-			if(!g1_selected[i] && !g2_selected[u])
-			{
-				mapping[i] = u;
-				inverse_mapping[u] = i;
-				g1_selected[i] = 1;
-				g2_selected[u] = 1;
-			}
-		}
-	}
-
-	else
-	{
-		// ############################################
-		// #            Alignment method 2            #
-		// ############################################
-		int num_of_aligned_node = 0;
-
-		while(num_of_aligned_node != g1_size)
-		{
-			double max_similarity = -10000.0;
-			int max_i;
-			int max_u;
-			for(int i = 0; i < g1_size; ++i)
-			{
-				if(!g1_selected[i])
+				for(int u = g2_size - 1; u >= 0; --u)
 				{
-					for(int u = g2_size - 1; u >= 0; --u)
+					if(!g2_selected_seed[u])
 					{
-						if(!g2_selected[u])
+						if(S_new[i][u] > max_similarity)
 						{
-							if(S_new[i][u] > max_similarity)
-							{
-								max_i = i;
-								max_u = u;
-								max_similarity = S_new[i][u];
-							}
-						}
-					}
-				}
-			}
-			num_of_aligned_node++;
-			mapping[max_i] = max_u;
-			inverse_mapping[max_u] = max_i;
-			g1_selected[max_i] = 1;
-			g2_selected[max_u] = 1;
-
-			for(int i_nei_index = 0; i_nei_index < g1_degree_sequence[max_i]; ++i_nei_index)
-			{
-				int i_nei = g1_neighbor_sequence[max_i][i_nei_index];
-				if(!g1_selected[i_nei])
-				{
-					for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[max_u]; ++u_nei_index)
-					{
-						int u_nei = g2_neighbor_sequence[max_u][u_nei_index];
-						if(!g2_selected[u_nei])
-						{
-							S_new[i_nei][u_nei] += 1;
+							max_i = i;
+							max_u = u;
+							max_similarity = S_new[i][u];
 						}
 					}
 				}
 			}
 		}
+		num_of_aligned_node++;
+		mapping_seed[max_i] = max_u;
+		inverse_mapping_seed[max_u] = max_i;
+		g1_selected_seed[max_i] = 1;
+		g2_selected_seed[max_u] = 1;
+
+		for(int i_nei_index = 0; i_nei_index < g1_degree_sequence[max_i]; ++i_nei_index)
+		{
+			int i_nei = g1_neighbor_sequence[max_i][i_nei_index];
+			if(!g1_selected_seed[i_nei])
+			{
+				for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[max_u]; ++u_nei_index)
+				{
+					int u_nei = g2_neighbor_sequence[max_u][u_nei_index];
+					if(!g2_selected_seed[u_nei])
+					{
+						S_new[i_nei][u_nei] += 1;
+					}
+				}
+			}
+		}
 	}
+	//}
 
 	// ##########################
 	// #       Initial EC       #
 	// ##########################
-	int mapped_edges = 0;
+	int mapped_edges_naive = 0;
 	for(int i = 0; i < g1_size; ++i)
 	{
-		int u = mapping[i];
+		int u = mapping_naive[i];
 		for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
 		{
 			int j = g1_neighbor_sequence[i][j_index];
-			int v = mapping[j];
+			int v = mapping_naive[j];
 			for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[u]; ++u_nei_index)
 			{
 				int u_nei = g2_neighbor_sequence[u][u_nei_index];
 				if(v == u_nei)
 				{
-					mapped_edges += 1;
+					mapped_edges_naive += 1;
 					break;
 				}
 			}
 		}
 	}
-	
-	cout<<"------------------------------\n";
-	cout<<"Initial Results:\n";
-	double ini_ec = (double) mapped_edges / (double) (2 * g1_num_of_edges);
-	cout<<"Initial EC: "<<ini_ec<<endl;
-	cout<<"Initial objective: "<<mapped_edges<<endl;
 
-
-	// #########################
-	// #       C, D & E        #
-	// #########################
-	int g3_size = 2 * g1_size; // we only consider the subgraph of G2 induced by mappings of vertices in G1
-	map<int, int> g2_induced_degree_sequence; // same as above
-	
-	int** C = new int*[g1_size]; // C
+	int mapped_edges_seed = 0;
 	for(int i = 0; i < g1_size; ++i)
 	{
-		C[i] = new int[g1_size];
-		for(int j = 0; j < g1_size; ++j)
-		{
-			C[i][j] = 0;
-		}
-	}
-
-	int** D = new int*[g2_size]; // D
-	for(int u = 0; u < g2_size; ++u)
-	{
-		D[u] = new int[g2_size];
-		for(int v = 0; v < g2_size; ++v)
-		{
-			D[u][v] = 0;
-		}
-	}
-
-	Eigen::SparseMatrix<int> E (g3_size, g3_size); // The adjacency matrix of G3. default value is 0
-	
-	// -------------------
-	// -        D        -
-	// -------------------
-	for(int u = 0; u < g2_size; ++u)
-	{
-		for(int v_index = 0; v_index < g2_degree_sequence[u]; ++v_index)
-		{
-			int v = g2_neighbor_sequence[u][v_index];
-			D[u][v] = 1;
-		}
-	}
-	// -----------------------
-	// -        C & E        -
-	// -----------------------
-	vector<tri_int> triplet_list_for_E;
-	triplet_list_for_E.reserve(2 * g1_size + 2 * g1_num_of_edges + 2 * g2_num_of_edges);
-	for(int i = 0; i < g1_size; ++i)
-	{
-		int u = mapping[i];
-		int induced_degree_of_u = 0;
-		int matrix_index_of_u = g1_size + i;
-
-		for(int k = 0; k < g1_size; ++k)
-		{
-			int v = mapping[k];
-			int matrix_index_of_v = g1_size + k;
-			if(D[u][v] == 1)
-			{
-				triplet_list_for_E.push_back(tri_int(matrix_index_of_u, matrix_index_of_v, 1));
-				induced_degree_of_u += 1;
-			}
-		}
-		g2_induced_degree_sequence[u] = induced_degree_of_u;
-
-		//Bridges between G1 and G2
-		triplet_list_for_E.push_back(tri_int(matrix_index_of_u, i, 1));
-		triplet_list_for_E.push_back(tri_int(i, matrix_index_of_u, 1));
-
-		for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
-		{
-			int j = g1_neighbor_sequence[i][j_index]; 
-			C[i][j] = 1;
-			triplet_list_for_E.push_back(tri_int(i, j, 1));
-		}
-	}
-	E.setFromTriplets(triplet_list_for_E.begin(), triplet_list_for_E.end());
-
-	// #################################
-	// #       Initial violation       #
-	// #################################
-	Eigen::Matrix<double, Eigen::Dynamic, 1> initial_violation;
-	initial_violation.resize(g3_size, 1);
-	double total_violation_sum = 0.0;
-
-	for(int i = 0; i < g1_size; ++i)
-	{
-		int u = mapping[i];
-		int matrix_index_of_u = g1_size + i;
-		int conserved_edges = 0;
-
+		int u = mapping_seed[i];
 		for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
 		{
 			int j = g1_neighbor_sequence[i][j_index];
-			int v = mapping[j];
-			conserved_edges += D[u][v];
-		}
-		double violation_of_i = (double) (g1_degree_sequence[i] - conserved_edges) / (g1_degree_sequence[i]);
-		double violation_of_u = (double) (g2_induced_degree_sequence[u] - conserved_edges) / (g2_induced_degree_sequence[u]);
-
-		total_violation_sum = total_violation_sum + violation_of_i + violation_of_u;
-
-		initial_violation[i] = violation_of_i;
-		initial_violation[matrix_index_of_u] = violation_of_u;
-	}
-
-	// ################################################################
-	// #      Quantify the degree of mismatching (random walk)        #
-	// ################################################################
-	double alpha = 0.5; // damping factor
-	int power_method_max_iter = 100;
-	double tolerance = 0.000001;
-
-	// --------------------------------------------------------------------
-	// -        Transition matrix, initial R & normalized violation       -
-	// --------------------------------------------------------------------
-	Eigen::SparseMatrix<double> left_stochastic_E (g3_size, g3_size);
-	vector<tri_double> triplet_list_for_sto_E;
-	triplet_list_for_E.reserve(2 * g1_size + 2 * g1_num_of_edges + 2 * g2_num_of_edges);
-
-	initial_violation.normalize();
-
-	Eigen::Matrix<double, Eigen::Dynamic, 1> R;
-	R.resize(g3_size, 1);
-	
-	for(int i = 0; i < g3_size; ++i)
-	{
-		R[i] = (double) 1.0 / g3_size;
-	}
-
-	for (int k=0; k<E.outerSize(); ++k)
-	{
-		for (Eigen::SparseMatrix<int>::InnerIterator it(E,k); it; ++it)
-		{
-			int c = it.col();
-			int r = it.row();	
-			if(c <= g1_size)
+			int v = mapping_seed[j];
+			for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[u]; ++u_nei_index)
 			{
-				triplet_list_for_sto_E.push_back(tri_double(r, c, (double) 1.0 / (g1_degree_sequence[c] + 1)));
-			} 
-			else
-			{
-				int u = mapping[c - g1_size];
-				triplet_list_for_sto_E.push_back(tri_double(r, c, (double) 1.0 / (g2_induced_degree_sequence[u] + 1)));
+				int u_nei = g2_neighbor_sequence[u][u_nei_index];
+				if(v == u_nei)
+				{
+					mapped_edges_seed += 1;
+					break;
+				}
 			}
 		}
 	}
-	left_stochastic_E.setFromTriplets(triplet_list_for_sto_E.begin(), triplet_list_for_sto_E.end());
 
-	// ----------------------------
-	// -        Random walk       -
-	// ----------------------------
-	cout<<"Ramdom walk starts:\n";
-	for(int iteration = 1; iteration <= power_method_max_iter; ++iteration)
-	{
-		cout<<"Iteration: "<<iteration<<endl;
-		auto R_new = alpha* left_stochastic_E * R + (1 - alpha) * initial_violation;
-		double error = (R_new - R).lpNorm<1>();
+	cout<<"------------------------------\n";
+	cout<<"Initial Results:\n";
+	double ini_ec_naive = (double) mapped_edges_naive / (double) (2 * g1_num_of_edges);
+	double ini_ec_seed = (double) mapped_edges_seed / (double) (2 * g1_num_of_edges);
+	cout<<"Initial EC Naive: "<<ini_ec_naive<<endl;
+	cout<<"Initial EC Seed: "<<ini_ec_seed<<endl;
+	// cout<<"Initial objective: "<<mapped_edges<<endl;
+
+	// // #########################
+	// // #       C, D & E        #
+	// // #########################
+	// int g3_size = 2 * g1_size; // we only consider the subgraph of G2 induced by mappings of vertices in G1
+	// map<int, int> g2_induced_degree_sequence; // same as above
+	
+	// int** C = new int*[g1_size]; // C
+	// for(int i = 0; i < g1_size; ++i)
+	// {
+	// 	C[i] = new int[g1_size];
+	// 	for(int j = 0; j < g1_size; ++j)
+	// 	{
+	// 		C[i][j] = 0;
+	// 	}
+	// }
+
+	// int** D = new int*[g2_size]; // D
+	// for(int u = 0; u < g2_size; ++u)
+	// {
+	// 	D[u] = new int[g2_size];
+	// 	for(int v = 0; v < g2_size; ++v)
+	// 	{
+	// 		D[u][v] = 0;
+	// 	}
+	// }
+
+	// Eigen::SparseMatrix<int> E (g3_size, g3_size); // The adjacency matrix of G3. default value is 0
+	
+	// // -------------------
+	// // -        D        -
+	// // -------------------
+	// for(int u = 0; u < g2_size; ++u)
+	// {
+	// 	for(int v_index = 0; v_index < g2_degree_sequence[u]; ++v_index)
+	// 	{
+	// 		int v = g2_neighbor_sequence[u][v_index];
+	// 		D[u][v] = 1;
+	// 	}
+	// }
+	// // -----------------------
+	// // -        C & E        -
+	// // -----------------------
+	// vector<tri_int> triplet_list_for_E;
+	// triplet_list_for_E.reserve(2 * g1_size + 2 * g1_num_of_edges + 2 * g2_num_of_edges);
+	// for(int i = 0; i < g1_size; ++i)
+	// {
+	// 	int u = mapping[i];
+	// 	int induced_degree_of_u = 0;
+	// 	int matrix_index_of_u = g1_size + i;
+
+	// 	for(int k = 0; k < g1_size; ++k)
+	// 	{
+	// 		int v = mapping[k];
+	// 		int matrix_index_of_v = g1_size + k;
+	// 		if(D[u][v] == 1)
+	// 		{
+	// 			triplet_list_for_E.push_back(tri_int(matrix_index_of_u, matrix_index_of_v, 1));
+	// 			induced_degree_of_u += 1;
+	// 		}
+	// 	}
+	// 	g2_induced_degree_sequence[u] = induced_degree_of_u;
+
+	// 	//Bridges between G1 and G2
+	// 	triplet_list_for_E.push_back(tri_int(matrix_index_of_u, i, 1));
+	// 	triplet_list_for_E.push_back(tri_int(i, matrix_index_of_u, 1));
+
+	// 	for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
+	// 	{
+	// 		int j = g1_neighbor_sequence[i][j_index]; 
+	// 		C[i][j] = 1;
+	// 		triplet_list_for_E.push_back(tri_int(i, j, 1));
+	// 	}
+	// }
+	// E.setFromTriplets(triplet_list_for_E.begin(), triplet_list_for_E.end());
+
+	// // #################################
+	// // #       Initial violation       #
+	// // #################################
+	// Eigen::Matrix<double, Eigen::Dynamic, 1> initial_violation;
+	// initial_violation.resize(g3_size, 1);
+	// double total_violation_sum = 0.0;
+
+	// for(int i = 0; i < g1_size; ++i)
+	// {
+	// 	int u = mapping[i];
+	// 	int matrix_index_of_u = g1_size + i;
+	// 	int conserved_edges = 0;
+
+	// 	for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
+	// 	{
+	// 		int j = g1_neighbor_sequence[i][j_index];
+	// 		int v = mapping[j];
+	// 		conserved_edges += D[u][v];
+	// 	}
+	// 	double violation_of_i = (double) (g1_degree_sequence[i] - conserved_edges) / (g1_degree_sequence[i]);
+	// 	double violation_of_u = (double) (g2_induced_degree_sequence[u] - conserved_edges) / (g2_induced_degree_sequence[u]);
+
+	// 	total_violation_sum = total_violation_sum + violation_of_i + violation_of_u;
+
+	// 	initial_violation[i] = violation_of_i;
+	// 	initial_violation[matrix_index_of_u] = violation_of_u;
+	// }
+
+	// // ################################################################
+	// // #      Quantify the degree of mismatching (random walk)        #
+	// // ################################################################
+	// double alpha = 0.5; // damping factor
+	// int power_method_max_iter = 100;
+	// double tolerance = 0.000001;
+
+	// // --------------------------------------------------------------------
+	// // -        Transition matrix, initial R & normalized violation       -
+	// // --------------------------------------------------------------------
+	// Eigen::SparseMatrix<double> left_stochastic_E (g3_size, g3_size);
+	// vector<tri_double> triplet_list_for_sto_E;
+	// triplet_list_for_E.reserve(2 * g1_size + 2 * g1_num_of_edges + 2 * g2_num_of_edges);
+
+	// initial_violation.normalize();
+
+	// Eigen::Matrix<double, Eigen::Dynamic, 1> R;
+	// R.resize(g3_size, 1);
+	
+	// for(int i = 0; i < g3_size; ++i)
+	// {
+	// 	R[i] = (double) 1.0 / g3_size;
+	// }
+
+	// for (int k=0; k<E.outerSize(); ++k)
+	// {
+	// 	for (Eigen::SparseMatrix<int>::InnerIterator it(E,k); it; ++it)
+	// 	{
+	// 		int c = it.col();
+	// 		int r = it.row();	
+	// 		if(c <= g1_size)
+	// 		{
+	// 			triplet_list_for_sto_E.push_back(tri_double(r, c, (double) 1.0 / (g1_degree_sequence[c] + 1)));
+	// 		} 
+	// 		else
+	// 		{
+	// 			int u = mapping[c - g1_size];
+	// 			triplet_list_for_sto_E.push_back(tri_double(r, c, (double) 1.0 / (g2_induced_degree_sequence[u] + 1)));
+	// 		}
+	// 	}
+	// }
+	// left_stochastic_E.setFromTriplets(triplet_list_for_sto_E.begin(), triplet_list_for_sto_E.end());
+
+	// // ----------------------------
+	// // -        Random walk       -
+	// // ----------------------------
+	// cout<<"Ramdom walk starts:\n";
+	// for(int iteration = 1; iteration <= power_method_max_iter; ++iteration)
+	// {
+	// 	cout<<"Iteration: "<<iteration<<endl;
+	// 	auto R_new = alpha* left_stochastic_E * R + (1 - alpha) * initial_violation;
+	// 	double error = (R_new - R).lpNorm<1>();
 		
-		R = R_new;
-		if(error < tolerance) break;
-	}
+	// 	R = R_new;
+	// 	if(error < tolerance) break;
+	// }
 
-	// -------------------------------------
-	// -       Rank vertices in g1          -
-	// -------------------------------------
-	vector<array<double, 2>> node_ranking_pari(g3_size); 
+	// // -------------------------------------
+	// // -       Rank vertices in g1          -
+	// // -------------------------------------
+	// vector<array<double, 2>> node_ranking_pari(g3_size); 
 
-	int index = 0;
-	for(int i = 0; i < g3_size; ++i)
-	{
-		node_ranking_pari[index][0] = i;
-		node_ranking_pari[index][1] = R[i];
-		index++;
-	}
+	// int index = 0;
+	// for(int i = 0; i < g3_size; ++i)
+	// {
+	// 	node_ranking_pari[index][0] = i;
+	// 	node_ranking_pari[index][1] = R[i];
+	// 	index++;
+	// }
 
-	sort(node_ranking_pari.begin(), node_ranking_pari.end(), [](const array<double, 2>& a, const array<double, 2>& b) {return a[1] > b[1];});
+	// sort(node_ranking_pari.begin(), node_ranking_pari.end(), [](const array<double, 2>& a, const array<double, 2>& b) {return a[1] > b[1];});
 
-	vector<int> nodes_in_g1_by_ranking;
-	nodes_in_g1_by_ranking.reserve(g1_size);
-	for(int i = 0; i < g3_size; ++i)
-	{
-		if(node_ranking_pari[i][0] < g1_size)
-		{
-			nodes_in_g1_by_ranking.push_back(i);
-		}
-	}
+	// vector<int> nodes_in_g1_by_ranking;
+	// nodes_in_g1_by_ranking.reserve(g1_size);
+	// for(int i = 0; i < g3_size; ++i)
+	// {
+	// 	if(node_ranking_pari[i][0] < g1_size)
+	// 	{
+	// 		nodes_in_g1_by_ranking.push_back(i);
+	// 	}
+	// }
 
 	// ############################
 	// #           Free           #
@@ -900,16 +927,16 @@ int main(int argc, char* argv[])
 	}
 	delete[] S_odd;
 
-	for(int i = 0; i < g1_size; ++i)
-	{
-		delete [] C[i];
-	}
-	delete[] C;
-	for(int i = 0; i < g2_size; ++i)
-	{
-		delete [] D[i];
-	}
-	delete[] D;
+	// for(int i = 0; i < g1_size; ++i)
+	// {
+	// 	delete [] C[i];
+	// }
+	// delete[] C;
+	// for(int i = 0; i < g2_size; ++i)
+	// {
+	// 	delete [] D[i];
+	// }
+	// delete[] D;
 
 
 	return 0;

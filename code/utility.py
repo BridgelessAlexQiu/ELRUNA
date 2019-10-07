@@ -48,7 +48,7 @@ def sort_dict(d : "the dictionary", dec = True):
 # --------------------------------------- #
 # * Search term: crg
 # Return a particular random graph
-def construct_random_graph(type = "homle", n = 200, p = 10, m = 0.4):
+def construct_random_graph(type = "homle", n = 200, p = 7, m = 0.4):
     if type == "homle":
         return nx.powerlaw_cluster_graph(n, p, m)
     elif type == "barabasi":
