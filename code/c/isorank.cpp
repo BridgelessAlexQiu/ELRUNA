@@ -345,7 +345,7 @@ int main(int argc, char* argv[])
 	cout<<"------------------------------\n";
 	cout<<"Initial Results:\n";
 	double ini_ec = (double) mapped_edges / (double) (2 * g1_num_of_edges);
-	cout<<"Initial EC Naive: "<<ini_ec<<endl;
+	cout<<"Initial EC Isorank: "<<ini_ec<<endl;
 
 	// ---------------------------
 	// -           Free          -

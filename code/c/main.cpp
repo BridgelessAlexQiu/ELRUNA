@@ -221,6 +221,15 @@ int main(int argc, char* argv[])
 
 	cout<<"------------------------------\n";
 
+	// --------------------------------------------
+	// -      If g1 has more nodes than g2        -
+	// --------------------------------------------
+	if(g1_size > g2_size)
+	{
+		cerr<<"Please make sure the size of G1 is less than or equal to the size of G2"<<endl;
+		return -1;
+	}
+
 	// #########################################################################
 	// #             Compute the percentage of node converage of g1	           #
 	// #########################################################################
@@ -554,11 +563,11 @@ int main(int argc, char* argv[])
 		{
 			b_g2[index] = b_g2_new[index];
 		}
-	}
+	} // end of similarity computation
 
-	//! HERE WE ASSUME THAT g1_size IS SMALLER, NOTE THAT THIS NEEDS TO BE UPDATED LATER
+
 	int mapping_naive[g1_size];
-	int mapping_seed[g2_size];
+	int mapping_seed[g1_size];
 
 	map<int, int> inverse_mapping_naive;
 	map<int, int> inverse_mapping_seed;
