@@ -12,7 +12,7 @@ y_hubalign = [1, 0.813846, 0.606154, 0.55, 0.548462, 0.481538, 0.506154, 0.47076
 
 y_iso = [0.996923, 0.432332, 0.146738, 0.124456, 0.134928, 0.238197, 0.158392, 0.1372819, 0.121192, 0.127389, 0.112910, 0.112007, 0.102927, 0.098727]
 
-y_natali = [0.5476923077, 0.5038461538, 0.3715384615, 0.3830769231, 0.3038461538, 0.31]# 0, 0.05, 0.11, 0.15, 0.21, 0.25
+y_natali = [0.5476923077, 0.5038461538, 0.3715384615, 0.3830769231, 0.3038461538, 0.31] # 0, 0.05, 0.11, 0.15, 0.21, 0.25
 
 plt.xlabel("Noise level")
 plt.ylabel("EC")
@@ -23,5 +23,6 @@ plt.plot(x, y_mine_naive, 'o--', label='Naive_alignment')
 plt.plot(x, y_mine_advanced, 'o--', label='Seed_alignment')
 plt.plot(x, y_hubalign, 'o--', label='HubAlign')
 plt.plot(x, y_netal, 'o--', label='NETAL')
+plt.plot(x, y_iso, 'o--', label='IsoRank')
 plt.legend()
 plt.show()
