@@ -653,7 +653,7 @@ int main(int argc, char* argv[])
 					int u_nei = g2_neighbor_sequence[max_u][u_nei_index];
 					if(!g2_selected_seed[u_nei])
 					{
-						S_new[i_nei][u_nei] += 1;
+						S_new[i_nei][u_nei] += 1.0;
 					}
 				}
 			}
@@ -703,14 +703,13 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
-
+	
 	cout<<"------------------------------\n";
 	cout<<"Initial Results:\n";
 	double ini_ec_naive = (double) mapped_edges_naive / (double) (2 * g1_num_of_edges);
 	double ini_ec_seed = (double) mapped_edges_seed / (double) (2 * g1_num_of_edges);
 	cout<<"Initial EC Naive: "<<ini_ec_naive<<endl;
 	cout<<"Initial EC Seed: "<<ini_ec_seed<<endl;
-	// cout<<"Initial objective: "<<mapped_edges<<endl;
 
 	// // #########################
 	// // #       C, D & E        #

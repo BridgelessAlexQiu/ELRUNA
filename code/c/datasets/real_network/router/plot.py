@@ -20,6 +20,7 @@ plt.title("Router network")
 
 plt.plot(x, y_mine_naive, 'o--', label='Naive_alignment')
 plt.plot(x, y_mine_advanced, 'o--', label='Seed_alignment')
+plt.plot(x, y_hubalign, 'o--', label='HubAlign')
 plt.plot(x, y_netal, 'o--', label='NETAL')
 plt.legend()
 
