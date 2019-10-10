@@ -36,7 +36,7 @@ style = {
 
 f, ax = plt.subplots(1,2)
 
-ax[0].set_title("Barabasi")
+ax[0].set_title(r"\texttt{barabasi}")
 ax[0].set_xlabel("Noise (\%)")
 ax[0].set_ylabel("Edge Correctness")
 ax[0].plot(barabasi_x, barabasi_y_mine_naive, **style['Naive alignment'])
@@ -45,7 +45,7 @@ ax[0].plot(barabasi_x, barabasi_y_netal, **style['NETAL'])
 ax[0].plot(barabasi_x, barabasi_y_hubalign, **style['HubAlign'])
 ax[0].plot(barabasi_x, barabasi_y_iso, **style['IsoRank'])
 
-ax[1].set_title("Homle")
+ax[1].set_title(r"\texttt{homle}")
 ax[1].set_xlabel("Noise (\%)")
 ax[1].plot(homle_x, homle_y_mine_naive, **style['Naive alignment'])
 ax[1].plot(homle_x, homle_y_mine_advanced, **style['Seed alignment'])
