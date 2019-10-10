@@ -265,7 +265,7 @@ int main(int argc, char* argv[])
 	// --------------------------------
 	// -            IsoRank           -
 	// --------------------------------
-	double alpha = 1;
+	double alpha = 0.5;
 	double tolerance = 0.00000001;
 	for(int iter = 1; iter <= max_iter; ++iter)
 	{
