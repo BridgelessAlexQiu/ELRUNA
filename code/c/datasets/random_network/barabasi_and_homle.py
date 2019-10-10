@@ -56,7 +56,7 @@ ax[1].plot(homle_x, homle_y_iso, **style['IsoRank'])
 
 # hardcode size
 width = 6.80914 / 2
-height = width / 1.3
+height = width / 1.5
 f.set_size_inches(width, height)
 
 from matplotlib.lines import Line2D
@@ -64,7 +64,8 @@ legend_elem = [Line2D([0], [0], label=method, **kwargs) for method, kwargs in st
 f.legend(handles=legend_elem, loc='lower center', ncol=2)
 
 #f.subplots_adjust(bottom=0.45, left=.175, right=1.0, top=.94)
-f.subplots_adjust(bottom=0.4, wspace=0.35)
 
+plt.tight_layout()
+f.subplots_adjust(bottom=0.45, wspace=0.35, right=0.9)
 #plt.show()
 plt.savefig('random.pdf')
