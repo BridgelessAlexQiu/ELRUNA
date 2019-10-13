@@ -37,21 +37,21 @@ style = {
 f, ax = plt.subplots(1,2)
 
 ax[0].set_title(r"\texttt{barabasi}")
-ax[0].set_xlabel("Noise (\%)")
+# ax[0].set_xlabel("Noise (\%)")
 ax[0].set_ylabel("Edge Correctness")
-ax[0].plot(barabasi_x, barabasi_y_mine_naive, **style['Naive alignment'])
-ax[0].plot(barabasi_x, barabasi_y_mine_advanced, **style['Seed alignment'])
 ax[0].plot(barabasi_x, barabasi_y_netal, **style['NETAL'])
 ax[0].plot(barabasi_x, barabasi_y_hubalign, **style['HubAlign'])
 ax[0].plot(barabasi_x, barabasi_y_iso, **style['IsoRank'])
+ax[0].plot(barabasi_x, barabasi_y_mine_naive, **style['Naive alignment'])
+ax[0].plot(barabasi_x, barabasi_y_mine_advanced, **style['Seed alignment'])
 
 ax[1].set_title(r"\texttt{homle}")
-ax[1].set_xlabel("Noise (\%)")
-ax[1].plot(homle_x, homle_y_mine_naive, **style['Naive alignment'])
-ax[1].plot(homle_x, homle_y_mine_advanced, **style['Seed alignment'])
+# ax[1].set_xlabel("Noise (\%)")
 ax[1].plot(homle_x, homle_y_netal, **style['NETAL'])
 ax[1].plot(homle_x, homle_y_hubalign, **style['HubAlign'])
 ax[1].plot(homle_x, homle_y_iso, **style['IsoRank'])
+ax[1].plot(homle_x, homle_y_mine_naive, **style['Naive alignment'])
+ax[1].plot(homle_x, homle_y_mine_advanced, **style['Seed alignment'])
 
 
 # hardcode size
@@ -61,7 +61,7 @@ f.set_size_inches(width, height)
 
 from matplotlib.lines import Line2D
 legend_elem = [Line2D([0], [0], label=method, **kwargs) for method, kwargs in style.items()]
-f.legend(handles=legend_elem, loc='lower center', ncol=2)
+#f.legend(handles=legend_elem, loc='lower center', ncol=2)
 
 #f.subplots_adjust(bottom=0.45, left=.175, right=1.0, top=.94)
 

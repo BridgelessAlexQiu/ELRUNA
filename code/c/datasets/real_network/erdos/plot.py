@@ -20,8 +20,8 @@ plt.ylim((0, 1.1))
 
 plt.title("Erdos network")
 
-plt.plot(x, y_mine_naive, 'o--', label='Naive_alignment')
-plt.plot(x, y_mine_advanced, 'o--', label='Seed_alignment')
+plt.plot(x, y_mine_naive, 'o--', label='Naive alignment')
+plt.plot(x, y_mine_advanced, 'o--', label='Seed alignment')
 plt.plot(x, y_netal, 'o--', label='NETAL')
 plt.plot(x, y_hubalign, 'o--', label='HubAlign')
 plt.plot(x, y_iso, 'o--', label='IsoRank')

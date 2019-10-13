@@ -306,8 +306,10 @@ int main(int argc, char* argv[])
 	// ------------------------
 	// -       Mapping        -
 	// ------------------------
+	int num_of_aligned_node = 0;
 	for(int index = 0; index < num_of_pairs; ++index)
 	{
+		if(num_of_aligned_node == g1_size) break;
 		int i = (int)edge_weight_pairs[index][0];
 		int u = (int)edge_weight_pairs[index][1];
 		if(!g1_selected[i] && !g2_selected[u])
@@ -316,6 +318,7 @@ int main(int argc, char* argv[])
 			inverse_mapping[u] = i;
 			g1_selected[i] = 1;
 			g2_selected[u] = 1;
+			num_of_aligned_node ++;
 		}
 	}
 

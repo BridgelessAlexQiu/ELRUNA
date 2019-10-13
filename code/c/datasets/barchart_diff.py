@@ -33,7 +33,7 @@ ax[0].set_ylim((0,1.1))
 
 ax[1].set_title(r"\texttt{elegan}")
 ax[1].bar(x,h_elegan,color=[style[l]['color'] for l in labels])
-ax[1].set_ylim((0,1.1))
+ax[1].set_ylim((0,0.6))
 
 for a in ax:
     a.set_xticks([])
