@@ -1,4 +1,3 @@
-Network Alignment
 **Run the alignment algorithm:**
 ```
 cd code/c
