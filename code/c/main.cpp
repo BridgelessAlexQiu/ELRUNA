@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 	char* g1_network_file_name; // name of the first network
 	char* g2_network_file_name; // name of the second network
 	int max_iter; // The diameter of the graph
-	bool use_seed_alignment_method = 0; // 1: use the advanced alignment method; 0: default alignment method
+	bool use_seed_alignment_method = 1; // 1: use the advanced alignment method; 0: default alignment method
 
 	// If the number of additional argumnets is incorrect
 	if(argc != 4 && argc != 5)
@@ -205,23 +205,7 @@ int main(int argc, char* argv[])
 	g2_num_of_edges /= 2; // each edges is counted twice
 	g2_network_file.close();
 
-	// ##############################################
-	// #        Output Network Information          #
-	// ##############################################
-	cout<<"G1:"<<endl;
-	cout<<"Number of nodes: "<<g1_size<<endl;
-	cout<<"Number of edges: "<<g1_num_of_edges<<endl;
-	cout<<"Average degree: "<<(double) (2 * g1_num_of_edges) / (g1_size) <<endl;
-
-	cout<<"------------------------------\n";
-
-	cout<<"G2:"<<endl;
-	cout<<"Number of nodes: "<<g2_size<<endl;
-	cout<<"Number of edges: "<<g2_num_of_edges<<endl;
-	cout<<"Average degree: "<<(double) (2 * g2_num_of_edges) / (g2_size) <<endl;
-
-	cout<<"------------------------------\n";
-
+	cout<<"Graph processing ends"<<endl;
 	// --------------------------------------------
 	// -      If g1 has more nodes than g2        -
 	// --------------------------------------------
@@ -357,7 +341,7 @@ int main(int argc, char* argv[])
 	// #              Initial Solution	               #
 	// #################################################
 	// Variables: g1_size, g2_size, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_node_coverage_percentage, g2_node_coverage_percentage, S, b_g1, b_g2, max_iter
-	cout<<"Initial Solution: \n";
+	cout<<"Similarity Computation Starts: \n";
 
 	double** S;
 	double** S_new;
