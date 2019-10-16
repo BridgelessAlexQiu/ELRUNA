@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
 	cout<<"Average degree: "<<(double) (2 * g2_num_of_edges) / (g2_size) <<endl;
 
 	cout<<"------------------------------\n";
-	
+
 	// --------------------------------------------
 	// -      If g1 has more nodes than g2        -
 	// --------------------------------------------
@@ -642,10 +642,10 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		int mapping_seed[g1_size];	
+		int mapping_seed[g1_size];
 		map<int, int> inverse_mapping_seed;
 		int g1_selected_seed[g1_size] = {0};
-		int g2_selected_seed[g2_size] = {0};	
+		int g2_selected_seed[g2_size] = {0};
 		int num_of_aligned_node_seed = 0;
 
 		// ############################################
