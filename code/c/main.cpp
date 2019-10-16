@@ -9,6 +9,7 @@
 #include <set>
 #include <array>
 #include <string>
+#include <sstream>
 #include "eigen/Eigen/SparseCore"
 #include "eigen/Eigen/Core"
 #include "eigen/Eigen/Dense"
@@ -220,9 +221,7 @@ int main(int argc, char* argv[])
 	cout<<"Average degree: "<<(double) (2 * g2_num_of_edges) / (g2_size) <<endl;
 
 	cout<<"------------------------------\n";
-
-	cout<<(g1_size + g2_size + g2_num_of_edges + g1_num_of_edges)<<endl;
-
+	
 	// --------------------------------------------
 	// -      If g1 has more nodes than g2        -
 	// --------------------------------------------
@@ -584,11 +583,8 @@ int main(int argc, char* argv[])
 	int num_of_aligned_node_naive = 0;
 	int num_of_aligned_node_seed = 0;
 
-	set<int> s1;
 	set<int> s2;
 
-	// if(use_default_alignment_method)
-	// {
 	// #########################################
 	// #           Alignment method 1          #
 	// #########################################
@@ -620,7 +616,6 @@ int main(int argc, char* argv[])
 		if(!g1_selected_naive[i] && !g2_selected_naive[u])
 		{
 			mapping_naive[i] = u;
-			s1.insert(u);
 			inverse_mapping_naive[u] = i;
 			g1_selected_naive[i] = 1;
 			g2_selected_naive[u] = 1;
@@ -628,77 +623,71 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	if(s1.size() != g1_size)
+	// ############################################
+	// #            Alignment method 2            #
+	// ############################################
+	// Format: {similarity : "i u"}
+	multimap<double, string, greater <double> > M;
+	for(int i = 0; i < g1_size; ++i)
+	{
+		for(int u = 0; u < g2_size; ++u)
+		{
+			string vertex_pair = std::to_string(i) + " " + std::to_string(u);
+			M.insert(multimap<double, string>::value_type(S_new[i][u], vertex_pair));
+		}
+	}
+
+	while(num_of_aligned_node_seed != g1_size)
+	{
+		multimap<double, string>::iterator it;
+		for(it = M.begin(); it != M.end(); )
+		{
+			istringstream iss(it->second);
+			int i, u;
+			iss>>i>>u;
+			if(!g1_selected_seed[i] && !g2_selected_seed[u]) //align
+			{
+				mapping_seed[i] = u;
+				s2.insert(u);
+				inverse_mapping_seed[u] = i;
+				for(int i_nei_index = 0; i_nei_index < g1_degree_sequence[i]; ++i_nei_index)
+				{
+					int i_nei = g1_neighbor_sequence[i][i_nei_index];
+					if(!g1_selected_seed[i_nei])
+					{
+						for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[u]; ++u_nei_index)
+						{
+							int u_nei = g2_neighbor_sequence[u][u_nei_index];
+							if(!g2_selected_seed[u_nei])
+							{
+								S_new[i_nei][u_nei] += 1.0;
+								string vertex_pair = std::to_string(i_nei) + " " + std::to_string(u_nei);
+								M.insert(multimap<double, string>::value_type(S_new[i_nei][u_nei], vertex_pair));
+							}
+						}
+					}
+				}
+				g1_selected_seed[i] = 1;
+				g2_selected_seed[u] = 1;
+				num_of_aligned_node_seed++;
+				break;
+			}
+
+			else //erase
+			{
+				M.erase(it++);
+			}
+		}
+	}
+	if(s2.size() != g1_size)
 	{
 		cerr<<"constraint is not working (how?)"<<endl;
 		return -1;
 	}
-	//}
 
-	// // else
-	// // {
-	// // ############################################
-	// // #            Alignment method 2            #
-	// // ############################################
-	//
-	// while(num_of_aligned_node_seed != g1_size)
-	// {
-	// 	double max_similarity = -10000.0;
-	// 	int max_i = -1;
-	// 	int max_u = -1;
-	// 	for(int i = 0; i < g1_size; ++i)
-	// 	{
-	// 		if(!g1_selected_seed[i])
-	// 		{
-	// 			for(int u = g2_size - 1; u >= 0; --u)
-	// 			{
-	// 				if(!g2_selected_seed[u])
-	// 				{
-	// 					if(S_new[i][u] > max_similarity)
-	// 					{
-	// 						max_i = i;
-	// 						max_u = u;
-	// 						max_similarity = S_new[i][u];
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	num_of_aligned_node_seed++;
-	// 	mapping_seed[max_i] = max_u;
-	// 	s2.insert(max_u);
-	// 	inverse_mapping_seed[max_u] = max_i;
-	// 	g1_selected_seed[max_i] = 1;
-	// 	g2_selected_seed[max_u] = 1;
-	//
-	// 	for(int i_nei_index = 0; i_nei_index < g1_degree_sequence[max_i]; ++i_nei_index)
-	// 	{
-	// 		int i_nei = g1_neighbor_sequence[max_i][i_nei_index];
-	// 		if(!g1_selected_seed[i_nei])
-	// 		{
-	// 			for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[max_u]; ++u_nei_index)
-	// 			{
-	// 				int u_nei = g2_neighbor_sequence[max_u][u_nei_index];
-	// 				if(!g2_selected_seed[u_nei])
-	// 				{
-	// 					S_new[i_nei][u_nei] += 1.0;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	// if(s2.size() != g1_size)
-	// {
-	// 	cerr<<"constraint is not working (how?)"<<endl;
-	// 	return -1;
-	// }
-
-	//}
-
-	// ##########################
-	// #       Initial EC       #
-	// ##########################
+	// ################################
+	// #       Initial EC Naive       #
+	// ################################
 	int mapped_edges_naive = 0;
 	for(int i = 0; i < g1_size; ++i)
 	{
@@ -719,32 +708,35 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	// int mapped_edges_seed = 0;
-	// for(int i = 0; i < g1_size; ++i)
-	// {
-	// 	int u = mapping_seed[i];
-	// 	for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
-	// 	{
-	// 		int j = g1_neighbor_sequence[i][j_index];
-	// 		int v = mapping_seed[j];
-	// 		for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[u]; ++u_nei_index)
-	// 		{
-	// 			int u_nei = g2_neighbor_sequence[u][u_nei_index];
-	// 			if(v == u_nei)
-	// 			{
-	// 				mapped_edges_seed += 1;
-	// 				break;
-	// 			}
-	// 		}
-	// 	}
-	// }
+	// ###############################
+	// #       Initial EC Seed       #
+	// ###############################
+	int mapped_edges_seed = 0;
+	for(int i = 0; i < g1_size; ++i)
+	{
+		int u = mapping_seed[i];
+		for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
+		{
+			int j = g1_neighbor_sequence[i][j_index];
+			int v = mapping_seed[j];
+			for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[u]; ++u_nei_index)
+			{
+				int u_nei = g2_neighbor_sequence[u][u_nei_index];
+				if(v == u_nei)
+				{
+					mapped_edges_seed += 1;
+					break;
+				}
+			}
+		}
+	}
 
 	cout<<"------------------------------\n";
 	cout<<"Initial Results:\n";
 	double ini_ec_naive = (double) mapped_edges_naive / (double) (2 * g1_num_of_edges);
-	// double ini_ec_seed = (double) mapped_edges_seed / (double) (2 * g1_num_of_edges);
+	double ini_ec_seed = (double) mapped_edges_seed / (double) (2 * g1_num_of_edges);
 	cout<<"Initial EC Naive: "<<ini_ec_naive<<endl;
-	// cout<<"Initial EC Seed: "<<ini_ec_seed<<endl;
+	cout<<"Initial EC Seed: "<<ini_ec_seed<<endl;
 
 	// // #########################
 	// // #       C, D & E        #
