@@ -1,23 +1,23 @@
 import networkx as nx
 import numpy as np
-#------------------------------------ #
-#            Remove weights           #
-#------------------------------------ #
-in_file_obj = open("bio_raw.edges", 'r')
-out_file_obj = open("bio.edges", 'w')
+# ------------------------------------ #
+#             Remove weights           #
+# ------------------------------------ #
+# in_file_obj = open("worm_net_g1_weighted.edges", 'r')
+# out_file_obj = open("worm_net_g1.edges", 'w')
 
-for line in in_file_obj:
-    i = line.split(' ')[0]
-    j = line.split(' ')[1]
-    out_file_obj.write(i + ' ' + j + '\n')
+# for line in in_file_obj:
+#     i = line.split(' ')[0]
+#     j = line.split(' ')[1]
+#     out_file_obj.write(i + ' ' + j + '\n')
 
-in_file_obj.close()
-out_file_obj.close()
+# in_file_obj.close()
+# out_file_obj.close()
 
 # --------------------------------- #
 #           Real Networks           #
 # --------------------------------- #
-g1 = nx.read_edgelist("bio.edges")
+g1 = nx.read_edgelist("worm_net_g1_raw.edges")
 
 # ------------------------------------- #
 #         Extract the Largest CC        #
@@ -44,7 +44,7 @@ print("The diameter: {}".format(nx.diameter(g1)))
 # ---------------------------------------------- #
 #          Write g1 to the .edges file           #
 # ---------------------------------------------- #
-g1_file_name = "bio_g1.edges"
+g1_file_name = "worm_net_g1.edges"
 nx.write_edgelist(g1, g1_file_name, data = False)
 
 # ---------------------------------------------- #
@@ -56,7 +56,7 @@ g2_node_list = np.random.permutation(g1_node_list) # random permutation of the l
 # Construct the ground truth mapping
 gt_mapping = dict()
 for i in range(len(g1_node_list)):
-    gt_mapping[g1_node_list[i]] = g2_node_list[i]
+        gt_mapping[g1_node_list[i]] = g2_node_list[i]
 
 # Construct the ground truth inverse mapping
 gt_inverse_mapping = dict()
@@ -66,7 +66,7 @@ for i in range(len(g2_node_list)):
 # ---------------------------------------------------- #
 #          Write gt_mapping to the .txt file           #
 # ---------------------------------------------------- #
-gt_file_name = "bio_gt_mapping.txt"
+gt_file_name = "worm_net_gt_mapping.txt" 
 gt_file = open(gt_file_name, 'w')
 for i, u in gt_mapping.items():
     line = str(i) + " " + str(u) + "\n"
@@ -83,9 +83,8 @@ for p in perturbation_probability:
         if i != j and (not g2.has_edge(i, j)):
             g2.add_edge(i,j)
             additional_edges -= 1
-
     # -------------------------- #
     #        Edgelist File       #
     # -------------------------- #
-    g2_file_name = "bio_" + str(p) + '_g2.edges'
+    g2_file_name = "worm_net_" + str(p) + '_g2.edges'
     nx.write_edgelist(g2, g2_file_name, data = False)

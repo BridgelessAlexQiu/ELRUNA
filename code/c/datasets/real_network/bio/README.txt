@@ -1,3 +1,2 @@
-Diameter: 19
-
-http://networkrepository.com/bio-DM-HT.php
+Diameter: 22
+Source: http://networkrepository.com/bio-CE-LC.php

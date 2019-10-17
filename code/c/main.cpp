@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 	char* g1_network_file_name; // name of the first network
 	char* g2_network_file_name; // name of the second network
 	int max_iter; // The diameter of the graph
-	bool use_seed_alignment_method = 1; // 1: use the advanced alignment method; 0: default alignment method
+	bool use_seed_alignment_method = 1; // 1: use the advanced alignment method; 0: naive alignment method
 
 	// If the number of additional argumnets is incorrect
 	if(argc != 4 && argc != 5)
@@ -206,6 +206,7 @@ int main(int argc, char* argv[])
 	g2_network_file.close();
 
 	cout<<"Graph processing ends"<<endl;
+
 	// --------------------------------------------
 	// -      If g1 has more nodes than g2        -
 	// --------------------------------------------
@@ -444,7 +445,7 @@ int main(int argc, char* argv[])
 							{
 								if(S[j][v] < 0) // this should never happen
 								{
-									cout<<S[j][v]<<" "<<b_g1[j]<<endl;
+									cout<<S[j][v]<<" and "<<b_g1[j]<<endl;
 								}
 								c += S[j][v];
 								i_neighbor_is_deleted[j_index] = 1;
@@ -715,6 +716,7 @@ int main(int argc, char* argv[])
 		double ini_ec_seed = (double) mapped_edges_seed / (double) (2 * g1_num_of_edges);
 		cout<<"Initial EC Seed: "<<ini_ec_seed<<endl;
 	}
+	
 	// ############################
 	// #           Free           #
 	// ############################
