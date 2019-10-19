@@ -20,7 +20,13 @@ g++ -std=c++11 -O3 main.cpp -o main
 ./main name_of_the_first_network name_of_the_second_network diameter [0/1]
 ```
 
-**Example:**
+**Example (using the seed alignment method):**
 ```
 ./main datasets/real_network/erdos/erdos_g1.edges datasets/real_network/erdos/erdos_0.25_g2.edges 14
+```
+
+
+**Example (using the naive alignment method):**
+```
+./main datasets/real_network/econ/econ_g1.edges datasets/real_network/econ/econ_0.25_g2.edges 8 0
 ```
