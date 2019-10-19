@@ -9,9 +9,9 @@
 **Naming convention of network files:**
 All network files can be found under the directory `datasets`. Based on the nature of networks (random vs real world), they are stored in separate folders `random_network` and `real_network`, respectively. 
 
-Given a network G1, its name has the format: *name_g1.edges*, for example: *erdos_g1.edges*.
+**G1:** Given a network G1, its name has the format: *name_g1.edges*, for example: *erdos_g1.edges*.
 
-A G2 is created upon G1 by adding *p* faction of additional edges. Names of G2s has the format: *name_p_g2.edges*, for example: *erdos_0.25_g2.edges*.
+**G2:** G2 is created upon G1 by adding *p* faction of additional edges. Names of G2s has the format: *name_p_g2.edges*, for example: *erdos_0.25_g2.edges*.
 
 **Run the alignment algorithm:**
 ```
