@@ -1,3 +1,5 @@
+**This is only the code for network alignment algorithm (local search is not included)**
+
 **Parameters:**
 1. *.edges* file of G1
 2. *.edges* file of G2 (**please make sure $|V_1| \leq |V_2|$**)
