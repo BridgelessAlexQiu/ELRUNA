@@ -25,4 +25,5 @@ plt.plot(x, y_netal, 'o--', label='NETAL')
 plt.plot(x, y_hubalign, 'o--', label='HubAlign')
 plt.plot(x, y_iso, 'o--', label='IsoRank')
 plt.legend()
+
 plt.show()

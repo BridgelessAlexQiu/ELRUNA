@@ -205,7 +205,15 @@ int main(int argc, char* argv[])
 	g2_num_of_edges /= 2; // each edges is counted twice
 	g2_network_file.close();
 
-	cout<<"Graph processing ends"<<endl;
+	cout<<"\nGraph Processing Ends"<<endl;
+
+	cout<<"=================\n";
+	cout<<"|V(G1)| = "<<g1_size<<endl;
+	cout<<"|E(G1)| = "<<g1_num_of_edges<<endl;
+	cout<<"=================\n";
+	cout<<"|V(G2)| = "<<g2_size<<endl;
+	cout<<"|E(G2)| = "<<g2_num_of_edges<<endl;
+	cout<<"=================\n\n";
 
 	// --------------------------------------------
 	// -      If g1 has more nodes than g2        -
@@ -343,6 +351,7 @@ int main(int argc, char* argv[])
 	// #################################################
 	// Variables: g1_size, g2_size, g1_neighbor_sequence, g2_neighbor_sequence, g1_degree_sequence, g2_degree_sequence, g1_node_coverage_percentage, g2_node_coverage_percentage, S, b_g1, b_g2, max_iter
 	cout<<"Similarity Computation Starts: \n";
+	cout<<"===============\n";
 
 	double** S;
 	double** S_new;
@@ -551,6 +560,11 @@ int main(int argc, char* argv[])
 		}
 	} // end of similarity computation
 
+	cout<<"===============\n\n";
+
+	cout<<"Alignment Starts:\n";
+	cout<<"============================\n";
+
 	if(!use_seed_alignment_method)
 	{
 		int mapping_naive[g1_size];
@@ -620,10 +634,10 @@ int main(int argc, char* argv[])
 				}
 			}
 		}
-		cout<<"------------------------------\n";
-		cout<<"Initial Results:\n";
+
 		double ini_ec_naive = (double) mapped_edges_naive / (double) (2 * g1_num_of_edges);
-		cout<<"Initial EC Naive: "<<ini_ec_naive<<endl;
+		cout<<"Initial EC using naive_version: "<<ini_ec_naive<<endl;
+		cout<<"============================\n";
 	}
 	else
 	{
@@ -711,10 +725,10 @@ int main(int argc, char* argv[])
 				}
 			}
 		}
-		cout<<"------------------------------\n";
-		cout<<"Initial Results:\n";
+
 		double ini_ec_seed = (double) mapped_edges_seed / (double) (2 * g1_num_of_edges);
-		cout<<"Initial EC Seed: "<<ini_ec_seed<<endl;
+		cout<<"Initial EC using seed_version: "<<ini_ec_seed<<endl;
+		cout<<"============================\n";
 	}
 	
 	// ############################

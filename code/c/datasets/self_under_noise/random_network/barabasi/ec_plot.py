@@ -15,7 +15,7 @@ y_iso = [1, 0.447219, 0.11305, 0.119229, 0.11414, 0.118502, 0.10578, 0.111232, 0
 plt.xlabel("Noise (%)", fontsize=20)
 plt.ylabel("Edge Correctness", fontsize=20)
 plt.ylim((0, 1.1))
-# plt.title("Barabasi-Albert preferential attachment network")
+plt.title("Barabasi-Albert preferential attachment network")
 
 plt.plot(x, y_mine_naive, 'o--', label='Naive alignment')
 plt.plot(x, y_mine_seed, '*--', label='Seed alignment')
@@ -23,5 +23,5 @@ plt.plot(x, y_netal, 's--', label='NETAL')
 plt.plot(x, y_hubalign, 'd--', label='HubAlign')
 plt.plot(x, y_iso, 'h--', label='IsoRank')
 plt.legend(loc='best')
-# put size here
+
 plt.show()
