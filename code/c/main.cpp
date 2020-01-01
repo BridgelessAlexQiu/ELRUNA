@@ -635,9 +635,26 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		double ini_ec_naive = (double) mapped_edges_naive / (double) (2 * g1_num_of_edges);
+		double ini_ec_naive = (double) mapped_edges_naive / (double) (2 * g1_num_of_edges); // ! each mapped edges is counted twice
 		cout<<"Initial EC using naive_version: "<<ini_ec_naive<<endl;
 		cout<<"============================\n";
+
+		// ################################
+		// #       Initial S3 Naive       #
+		// ################################
+		mapped_edges_naive /= 2; // ! each mapped edges is counted twice
+		double ini_s3_naive = 0.0;
+		if(g1_size == g2_size)
+		{
+			double denominator = (double) g1_num_of_edges + (double) g2_num_of_edges - (double) mapped_edges_naive;
+			ini_s3_naive = (double) mapped_edges_naive / denominator;
+			cout<<"Initial S3 using naive_version: "<<ini_s3_naive<<endl;
+		}
+		else
+		{
+			cout<<"The code for computing S3 on networks with different sizes is not finished yet\n";
+		}
+		
 	}
 	else
 	{
@@ -729,6 +746,22 @@ int main(int argc, char* argv[])
 		double ini_ec_seed = (double) mapped_edges_seed / (double) (2 * g1_num_of_edges);
 		cout<<"Initial EC using seed_version: "<<ini_ec_seed<<endl;
 		cout<<"============================\n";
+
+		// ###############################
+		// #       Initial S3 Seed       #
+		// ###############################
+		mapped_edges_seed /= 2; // ! each mapped edges is counted twice
+		double ini_s3_seed = 0.0;
+		if(g1_size == g2_size)
+		{
+			double denominator = (double) g1_num_of_edges + (double) g2_num_of_edges - (double) mapped_edges_seed;
+			ini_s3_seed = (double) mapped_edges_seed / denominator;
+			cout<<"Initial S3 using seed_version: "<<ini_s3_seed<<endl;
+		}
+		else
+		{
+			cout<<"The code for computing S3 on networks with different sizes is not finished yet\n";
+		}
 	}
 	
 	// ############################
