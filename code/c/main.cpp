@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
 {
 	char* g1_network_file_name; // name of the first network
 	char* g2_network_file_name; // name of the second network
+	
 	int max_iter; // The diameter of the graph
 	bool use_seed_alignment_method = 1; // 1: use the advanced alignment method; 0: naive alignment method
 
@@ -358,7 +359,7 @@ int main(int argc, char* argv[])
 
 	for(int num_of_iter = 0; num_of_iter != max_iter; ++num_of_iter)
 	{
-		cout<<"Iteration: "<<num_of_iter + 1<<endl;
+		//cout<<"Iteration: "<<num_of_iter + 1<<endl;
 		// -----------------------
 		// -      Update S       -
 		// -----------------------
