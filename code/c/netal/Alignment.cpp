@@ -568,7 +568,6 @@ void Alignment::align(double aa)
 		}
 
 	}
-    cout << endl;
 
     for(int j=0; j<network1.size; j++)
     {

@@ -8,9 +8,9 @@
 #include <tuple>
 #include <array>
 #include <string>
-#include "eigen/Eigen/SparseCore"
-#include "eigen/Eigen/Core"
-#include "eigen/Eigen/Dense"
+#include "../eigen/Eigen/SparseCore"
+#include "../eigen/Eigen/Core"
+#include "../eigen/Eigen/Dense"
 
 typedef Eigen::Triplet<int> tri_int;
 typedef Eigen::Triplet<double> tri_double;
@@ -55,13 +55,13 @@ int main(int argc, char* argv[])
 		// the file types of random network and newman real networks are edgeslist
 		if(network_label != "newman" && network_type != "random_network")
 		{
-			g1_network_file_name = "datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_g1.edges";
-			g2_network_file_name = "datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_" + p + "_g2.edges";
+			g1_network_file_name = "../datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_g1.edges";
+			g2_network_file_name = "../datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_" + p + "_g2.edges";
 		}
 		else
 		{
-			g1_network_file_name = "datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_g1.edgelist";
-			g2_network_file_name = "datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_" + p + "_g2.edgelist";
+			g1_network_file_name = "../datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_g1.edgelist";
+			g2_network_file_name = "../datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_" + p + "_g2.edgelist";
 			if(network_type == "random_network" && unique_i == 12)
 			{
 				cout<<"EC: \n";
