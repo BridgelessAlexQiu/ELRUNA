@@ -1,9 +1,0 @@
-#PBS -l select=1:ncpus=24:mem=64gb,walltime=23:00:00
-
-cd Network_Alignment/code/c/
-
-module add gcc/6.3.0
-
-g++ -std=c++11 isorank_exp.cpp -o isorank_exp
-
-./isorank_exp real_network social 100000
