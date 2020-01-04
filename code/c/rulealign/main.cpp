@@ -10,9 +10,9 @@
 #include <array>
 #include <string>
 #include <sstream>
-#include "eigen/Eigen/SparseCore"
-#include "eigen/Eigen/Core"
-#include "eigen/Eigen/Dense"
+#include "../eigen/Eigen/SparseCore"
+#include "../eigen/Eigen/Core"
+#include "../eigen/Eigen/Dense"
 
 typedef Eigen::Triplet<int> tri_int;
 typedef Eigen::Triplet<double> tri_double;
