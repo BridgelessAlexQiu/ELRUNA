@@ -23,6 +23,7 @@ for rn in random_network_name:
         out1_garbage_name = "output" + garbage_location + "/" + rn + "_" + rp + ".txt"
         out2_name = output_location + "/" + rn + "/" + rn + "_" + rp + ".txt"
         command = "./CGRAAL_unix64" + " " + g1_name + " " + g2_name + " " + sim_location + " " + out1_garbage_name + " " + out2_name
+        
         os.system(command)
 
 # ---------- Real Network ------------- #

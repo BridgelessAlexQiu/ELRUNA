@@ -25,7 +25,7 @@ for i in range(2):
 #      Real Network     #
 # --------------------- #
 real_location = "../gw_dataset/self_under_noise/real_network"
-for i in range(10):
+for i in range(8):
     name = real_network_name[i]
     size = real_network_size[i]
     file_name = real_location + "/" + name + "/sim.txt"
