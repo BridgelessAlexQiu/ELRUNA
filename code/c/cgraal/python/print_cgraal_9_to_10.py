@@ -10,8 +10,8 @@ garbage_location = "/garbage"
 sim_name = "sim.txt"
 
 # ---------- Real Network ------------- #
-real_network_location = "../gw_dataset/self_under_noise/real_network"
-output_location = "../output/real_network"
+real_network_location = "gw_dataset/self_under_noise/real_network"
+output_location = "output/real_network"
 
 for rn in real_network_name:
     g1_name = real_network_location + "/" + rn + "/" + rn + "_g1.gw"
