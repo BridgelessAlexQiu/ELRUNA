@@ -246,77 +246,78 @@ int main(int argc, char* argv[])
 
         if(output_file.fail())// If we cannot locate the file
         {
-            cerr<<"File: "<<output_file_name<<" cannot be found\n";
-            return -1;
-        }
-
-        // Construct mappings
-
-        int mapping[g1_size];
-
-        string line;
-        while (getline(output_file, line))  //reading network file
-        {
-            istringstream linestream(line);
-            string node1, node2;
-            
-            //read the first node in a row
-            getline(linestream, node1, '\t'); //first node
-
-            if(node1.length() == 0) continue;
-
-            getline(linestream, node2, '\t'); //second node
-
-            mapping[g1_name_id_mapping[node1]] = g2_name_id_mapping[node2];
-            
-        }
-        output_file.close();
-        
-        // ###########################
-        // #       Initial EC        #
-        // ###########################
-        int mapped_edges= 0;
-        for(int i = 0; i < g1_size; ++i)
-        {
-            int u = mapping[i];
-            for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
-            {
-                int j = g1_neighbor_sequence[i][j_index];
-                int v = mapping[j];
-                for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[u]; ++u_nei_index)
-                {
-                    int u_nei = g2_neighbor_sequence[u][u_nei_index];
-                    if(v == u_nei)
-                    {
-                        mapped_edges += 1;
-                        break;
-                    }
-                }
-            }
-        }
-
-        double ini_ec = (double) mapped_edges / (double) (2 * g1_num_of_edges); // ! each mapped edges is counted twice
-        ec_result_vector.push_back(ini_ec);
-
-        // ##########################
-        // #       Initial S3       #
-        // ##########################
-        mapped_edges /= 2; // ! each mapped edges is counted twice
-        double ini_s3 = 0.0;
-        if(g1_size == g2_size)
-        {
-            double denominator = (double) g1_num_of_edges + (double) g2_num_of_edges - (double) mapped_edges;
-            ini_s3 = (double) mapped_edges / denominator;
-            s3_result_vector.push_back(ini_s3);
+            ec_result_vector.push_back(0.0);
+            s3_result_vector.push_back(0.0);
         }
         else
         {
-            cout<<"The code for computing S3 on networks with different sizes is not finished yet\n";
+            // Construct mappings
+            int mapping[g1_size];
+
+            string line;
+            while (getline(output_file, line))  //reading network file
+            {
+                istringstream linestream(line);
+                string node1, node2;
+                
+                //read the first node in a row
+                getline(linestream, node1, '\t'); //first node
+
+                if(node1.length() == 0) continue;
+
+                getline(linestream, node2, '\t'); //second node
+
+                mapping[g1_name_id_mapping[node1]] = g2_name_id_mapping[node2];
+                
+            }
+            output_file.close();
+            
+            // ###########################
+            // #       Initial EC        #
+            // ###########################
+            int mapped_edges= 0;
+            for(int i = 0; i < g1_size; ++i)
+            {
+                int u = mapping[i];
+                for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
+                {
+                    int j = g1_neighbor_sequence[i][j_index];
+                    int v = mapping[j];
+                    for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[u]; ++u_nei_index)
+                    {
+                        int u_nei = g2_neighbor_sequence[u][u_nei_index];
+                        if(v == u_nei)
+                        {
+                            mapped_edges += 1;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            double ini_ec = (double) mapped_edges / (double) (2 * g1_num_of_edges); // ! each mapped edges is counted twice
+            ec_result_vector.push_back(ini_ec);
+
+            // ##########################
+            // #       Initial S3       #
+            // ##########################
+            mapped_edges /= 2; // ! each mapped edges is counted twice
+            double ini_s3 = 0.0;
+            if(g1_size == g2_size)
+            {
+                double denominator = (double) g1_num_of_edges + (double) g2_num_of_edges - (double) mapped_edges;
+                ini_s3 = (double) mapped_edges / denominator;
+                s3_result_vector.push_back(ini_s3);
+            }
+            else
+            {
+                cout<<"The code for computing S3 on networks with different sizes is not finished yet\n";
+            }
         }
         
-        // ############################
-        // #           Free           #
-        // ############################
+        // ###########################
+        // #           Free          #
+        // ###########################
         delete[] g1_degree_sequence;
         delete[] g2_degree_sequence;
 
