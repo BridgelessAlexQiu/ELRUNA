@@ -3,7 +3,7 @@ clear
 
 network_name = ["barabasi", "homle"];
 
-noise = ["0", "0.01", "0.03", "0.05", "0.07", "0.09", "0.11", "0.13", "0.15", "0.17", "0.19", "0.21"];
+noise = ["0", "0.01", "0.03", "0.05", "0.07", "0.09", "0.11", "0.13", "0.15", "0.17", "0.19", "0.21" ];
 
 network_file_location = "datasets/self_under_noise/random_network";
 
@@ -27,7 +27,7 @@ for i = 1 : length(network_name)
         n2 = size(A2, 1); % size of the second network
         
         L = dlmread(l_file_name);
-        
+
         %Start NetAlign
         [S,w,li,lj] = netalign_setup(A1,A2,L);
         x = netalignbp(S,w,0,1,li,lj);
