@@ -655,7 +655,6 @@ int main(int argc, char* argv[])
 		{
 			cout<<"The code for computing S3 on networks with different sizes is not finished yet\n";
 		}
-		
 	}
 	else
 	{
@@ -763,6 +762,7 @@ int main(int argc, char* argv[])
 		{
 			cout<<"The code for computing S3 on networks with different sizes is not finished yet\n";
 		}
+
 	}
 	
 	// ############################
