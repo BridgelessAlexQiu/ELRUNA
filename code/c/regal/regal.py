@@ -16,9 +16,9 @@ from alignments import *
 def parse_args():
 	parser = argparse.ArgumentParser(description="Run REGAL.")
 
-	parser.add_argument('--input', nargs='?', default='data/arenas_combined_edges.txt', help="Edgelist of combined input graph")
+	parser.add_argument('--input', nargs='?', default='datasets/example.txt', help="Edgelist of combined input graph")
 
-	parser.add_argument('--output', nargs='?', default='emb/arenas990-1.emb',
+	parser.add_argument('--output', nargs='?', default='emb/example.emb',
 	                    help='Embeddings path')
 
 	parser.add_argument('--attributes', nargs='?', default=None,
@@ -39,25 +39,11 @@ def parse_args():
 	parser.add_argument('--alpha', type=float, default = 0.01, help = "Discount factor for further layers")
 	parser.add_argument('--gammastruc', type=float, default = 1, help = "Weight on structural similarity")
 	parser.add_argument('--gammaattr', type=float, default = 1, help = "Weight on attribute similarity")
-	parser.add_argument('--numtop', type=int, default=30,help="Number of top similarities to compute with kd-tree.  If 0, computes all pairwise similarities.")
+	parser.add_argument('--numtop', type=int, default=0,help="Number of top similarities to compute with kd-tree.  If 0, computes all pairwise similarities.")
 	parser.add_argument('--buckets', default=2, type=float, help="base of log for degree (node feature) binning")
 	return parser.parse_args()
 
 def main(args):
-	dataset_name = args.output.split("/")
-	if len(dataset_name) == 1:
-		dataset_name = dataset_name[-1].split(".")[0]
-	else:
-		dataset_name = dataset_name[-2]
-
-	#Get true alignments
-	true_alignments_fname = args.input.split("_")[0] + "_edges-mapping-permutation.txt" #can be changed if desired
-	print "true alignments file: ", true_alignments_fname
-	true_alignments = None
-	if os.path.exists(true_alignments_fname):
-		with open(true_alignments_fname, "rb") as true_alignments_file:
-			true_alignments = pickle.load(true_alignments_file)
-
 	#Load in attributes if desired (assumes they are numpy array)
 	if args.attributes is not None:
 		args.attributes = np.load(args.attributes, allow_pickle=True) #load vector of attributes in from file
@@ -84,10 +70,7 @@ def main(args):
 	total_time = after_align - before_align
 	print("Align time: "), total_time
 
-	if true_alignments is not None:
-		topk_scores = [1]
-		for k in topk_scores:
-			score_alignment_matrix(alignment_matrix, topk = k, true_alignments = true_alignments)
+	score_alignment_matrix(alignment_matrix, topk = 1)
 
 #Should take in a file with the input graph as edgelist (args.input)
 #Should save representations to args.output
@@ -124,8 +107,11 @@ def learn_representations(args):
 def score_alignment_matrix(alignment_matrix, topk = None, topk_score_weighted = False, true_alignments = None):
 	n_nodes = alignment_matrix.shape[0] # size of the network (we assume two graphs are of same size)
 
+	output_file = open("output/example.out", 'w')
+
+	selected = [0] * n_nodes;
+
 	if not sp.issparse(alignment_matrix):
-		print("Cauion: Somehow the matrix is not sparse")
 		sorted_indices = np.argsort(alignment_matrix)
 
 	for node_index in range(n_nodes):
@@ -134,11 +120,18 @@ def score_alignment_matrix(alignment_matrix, topk = None, topk_score_weighted = 
 			node_sorted_indices = possible_alignments[possible_values.argsort()] # Sort in descending order!!!!
 
 		else:
-			print("Cauion: Somehow the matrix is not sparse")
 			node_sorted_indices = sorted_indices[node_index]
 
-		print("{}\t{}".format(node_index, node_sorted_indices[-1]))
+		for i2 in range(1, n_nodes+1):
+			target = node_sorted_indices[-i2]
+			if not selected[target]:
+				output_file.write("{}\t{}\n".format(node_index, target))
+				selected[target] = 1
+				break
+			if i2 == args.numtop:
+				print("WARNING, node {} is unaligned".format(node_index))
 
+	output_file.close()
 
 if __name__ == "__main__":
 	args = parse_args()

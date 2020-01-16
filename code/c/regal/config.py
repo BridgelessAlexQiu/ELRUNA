@@ -32,7 +32,7 @@ class Graph():
 				true_alignments = None):
 		self.G_adj = adj #adjacency matrix
 		self.N = self.G_adj.shape[0] #number of nodes
-		self.node_degrees = np.ravel(np.sum(self.G_adj, axis=0).astype(int))
+		self.node_degrees = np.ravel(self.G_adj.sum(axis=0).astype(int)) #np.ravel(np.sum(self.G_adj, axis=0).astype(int)) 
 		self.max_degree = max(self.node_degrees)
 		self.num_buckets = num_buckets #how many buckets to break node features into
 
