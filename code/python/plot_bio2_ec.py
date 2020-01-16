@@ -24,9 +24,9 @@ y_cgraal = [0.800526, 0.451995, 0.358395, 0.544936, 0.405743, 0.390618, 0.448049
 y_eigenalign = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
 y_netalign = [0.0800088, 0.0721175, 0.0795704, 0.0786936, 0.0806664, 0.0580886, 0.0587462, 0.0604998, 0.0604998, 0.0469093, 0.0464708, 0.0370452, 0.0488821, 0.0403332, ]
 y_klau = [0.0962297, 0.0859272, 0.0918457, 0.0938185, 0.0946953, 0.0694871, 0.0723367, 0.0749671, 0.0747479, 0.0591846, 0.0537045, 0.0506357, 0.0561157, 0.0530469, ]
+y_regal = [0.884261, 0.615958, 0.410785, 0.303376, 0.274003, 0.157168, 0.125384, 0.142262, 0.140509, 0.107847, 0.0909689, 0.0830776, 0.0600614, 0.0563349, ]
 
-
-cmap = ListedColormap(sns.color_palette("colorblind", 10))
+cmap = ListedColormap(sns.color_palette("colorblind", 11))
 markersize = 4
 style = {
         'RuleAlign_naive':  {'color': cmap(0), 'marker': 'o', 'linestyle': '--', 'markersize': markersize},
@@ -39,6 +39,7 @@ style = {
         'EigaenAlign':       {'color': cmap(7), 'marker': '<', 'linestyle': '--', 'markersize': markersize},
         "NetAlign":         {'color': cmap(8), 'marker': 'x', 'linestyle': '--', 'markersize': markersize},
         "Klau":             {'color': cmap(9), 'marker': 'X', 'linestyle': '--', 'markersize': markersize},
+        "REGAL":            {'color': cmap(10), 'marker': 'd', 'linestyle': '--', 'markersize': markersize},
         }
 
 nrows = 1
@@ -57,6 +58,7 @@ ax.plot(x, y_cgraal, **style['C-GRAAL'])
 ax.plot(x, y_eigenalign, **style['EigaenAlign'])
 ax.plot(x, y_netalign, **style['NetAlign'])
 ax.plot(x, y_klau, **style['Klau'])
+ax.plot(x, y_regal, **style['REGAL'])
 
 from matplotlib.lines import Line2D
 legend_elem = [Line2D([0], [0], label=method, **kwargs) for method, kwargs in style.items()]
@@ -66,5 +68,5 @@ f.subplots_adjust(bottom=0.90, left=.175, right=1.0, top=.94)
 
 plt.tight_layout()
 f.subplots_adjust(bottom=0.24, hspace=0.6, wspace=0.35, right=0.9)
-plt.show()
+
 plt.savefig('plots/' + network_type + "/" + plot_name)
