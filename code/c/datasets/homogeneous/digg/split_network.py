@@ -6,12 +6,13 @@ import networkx as nx
 G_full = nx.read_edgelist("digg_full.edges", nodetype = int)
 print("Full network info:")
 print(nx.info(G_full))
+print("\n")
 
 # --------------------------- #
 #       Induced Subgraph      #
 # --------------------------- #
-node_subset_1 = list(range(1000, 7500))
-node_subset_2 = list(range(4500, 14500))
+node_subset_1 = list(range(3000, 7500))
+node_subset_2 = list(range(4500, 12500))
 
 g1 = G_full.subgraph(node_subset_1)
 g2 = G_full.subgraph(node_subset_2)
@@ -27,11 +28,15 @@ g2 = g2.subgraph(largest_cc_g2)
 
 print("Network Info of g1:")
 print(nx.info(g1))
-#print("diameter: {}".format(nx.diameter(g1)))
+#print("diameter: {}".format(nx.diameter(g1))) # Taking too long
+print("\n")
+
 
 print("Network Info of g2:")
 print(nx.info(g2))
 #print("diameter: {}".format(nx.diameter(g2)))
+print("\n")
+
 
 set_1 = set(g1.nodes())
 set_2 = set(g2.nodes())
