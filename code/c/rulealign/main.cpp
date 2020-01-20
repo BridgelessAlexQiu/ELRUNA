@@ -359,7 +359,7 @@ int main(int argc, char* argv[])
 
 	for(int num_of_iter = 0; num_of_iter != max_iter; ++num_of_iter)
 	{
-		//cout<<"Iteration: "<<num_of_iter + 1<<endl;
+		cout<<"Iteration: "<<num_of_iter + 1<<endl;
 		// -----------------------
 		// -      Update S       -
 		// -----------------------

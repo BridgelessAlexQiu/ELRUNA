@@ -11,9 +11,8 @@ print("\n")
 # --------------------------- #
 #       Induced Subgraph      #
 # --------------------------- #
-node_subset_1 = list(range(8500, 20500)) # range(2500, 10500)
-node_subset_2 = list(range(10500, 22500)) # range(3500, 11500)
-
+node_subset_1 = list(range(20500, 32500)) # range(8500, 20500)
+node_subset_2 = list(range(22500, 35000)) # range(10500, 22500)
 g1 = G_full.subgraph(node_subset_1)
 g2 = G_full.subgraph(node_subset_2)
 
