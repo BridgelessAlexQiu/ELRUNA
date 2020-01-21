@@ -19,7 +19,7 @@ end
 for i = 1 : (n2-1)
     for j = i+1 : n2
         if lastfm(i, j) == 1
-            fprintf(lasrfm_file, "%s %s\n", int2str(i), int2str(j)); % -1 because matlab is one-indexed
+            fprintf(lastfm_file, "%s %s\n", int2str(i), int2str(j)); % -1 because matlab is one-indexed
         end
     end
 end
