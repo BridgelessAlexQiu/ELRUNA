@@ -5,8 +5,8 @@ load('Douban.mat')
 n1 = size(offline, 1);
 n2 = size(online, 1);
 
-offline_file = fopen("offline.edges", "w");
-online_file = fopen("online.edges", "w");
+offline_file = fopen("offline_raw.edges", "w");
+online_file = fopen("online_raw.edges", "w");
 
 for i = 1 : (n1-1)
     for j = i+1 : n1

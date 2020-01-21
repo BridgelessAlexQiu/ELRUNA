@@ -4,8 +4,8 @@ load('flickr-myspace.mat')
 n1 = size(flickr, 1);
 n2 = size(myspace, 1);
 
-flickr_file = fopen("flickr.edges", "w");
-myspace_file = fopen("myspace.edges", "w");
+flickr_file = fopen("flickr_raw.edges", "w");
+myspace_file = fopen("myspace_raw.edges", "w");
 
 for i = 1 : (n1-1)
     for j = i+1 : n1

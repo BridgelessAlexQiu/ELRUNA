@@ -5,8 +5,8 @@ load('flickr-lastfm.mat')
 n1 = size(flickr, 1);
 n2 = size(lastfm, 1);
 
-flickr_file = fopen("flickr.edges", "w");
-lastfm_file = fopen("lastfm.edges", "w");
+flickr_file = fopen("flickr_raw.edges", "w");
+lastfm_file = fopen("lastfm_raw.edges", "w");
 
 for i = 1 : (n1-1)
     for j = i+1 : n1
