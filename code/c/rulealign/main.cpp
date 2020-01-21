@@ -530,8 +530,12 @@ int main(int argc, char* argv[])
 				else
 				{
 					S_new[i][u] = c / maxi;
-					if(S_new[i][u] < -1) cout<<S_new[i][u]<<endl;
-					S_new[i][u] = -1;
+					if(S_new[i][u] < -1)
+					{
+						cout<<S_new[i][u]<<endl;
+						S_new[i][u] = -1;
+					} 
+					
 				}
 
 				// ------------------------------------------
