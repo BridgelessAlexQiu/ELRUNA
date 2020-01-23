@@ -3,7 +3,7 @@
 #   1. convert .gw to .edges file
 #   2. extract the lcc from each network, and remove loops and relable vertices with ints
 
-import networkx nx
+import networkx as nx
 
 # names of each network
 networks = ["cjejuni", "ecoli", "human", "meso", "syne", "yeast"]
