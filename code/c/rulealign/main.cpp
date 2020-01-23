@@ -621,10 +621,12 @@ int main(int argc, char* argv[])
 		// ################################
 		// #       Initial EC Naive       #
 		// ################################
+		vector<int> mapped_vertices_in_g2 (g2_size, 0); // default is 0
 		int mapped_edges_naive = 0;
 		for(int i = 0; i < g1_size; ++i)
 		{
 			int u = mapping_naive[i];
+			mapped_vertices_in_g2[u] = 1; // assign to 1
 			for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
 			{
 				int j = g1_neighbor_sequence[i][j_index];
@@ -649,6 +651,23 @@ int main(int argc, char* argv[])
 		// #       Initial S3 Naive       #
 		// ################################
 		mapped_edges_naive /= 2; // ! each mapped edges is counted twice
+
+		// Compute the number of edges in the induced G2
+		double induced_g2_num_of_edges = 0.0;
+		for(int u = 0; u < g2_size; ++u)
+		{
+			if(mapped_vertices_in_g2[u]) // if u is mapped
+			{
+				for(int v_index = 0; v_index < g2_degree_sequence[u]; ++v_index)
+				{
+					int v = g2_neighbor_sequence[u][v_index];
+					if(mapped_vertices_in_g2[v]) induced_g2_num_of_edges += 1.0;
+				}
+			}
+		}
+
+		induced_g2_num_of_edges /= 2; // each edge is counted twice
+
 		double ini_s3_naive = 0.0;
 		if(g1_size == g2_size)
 		{
@@ -658,7 +677,9 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			cout<<"The code for computing S3 on networks with different sizes is not finished yet\n";
+			double denominator = (double) g1_num_of_edges + (double) induced_g2_num_of_edges - (double) mapped_edges_naive;
+			ini_s3_naive = (double) mapped_edges_naive / denominator;
+			cout<<"Initial S3 using seed_version: "<<ini_s3_naive<<endl;
 		}
 	}
 	else
@@ -728,10 +749,12 @@ int main(int argc, char* argv[])
 		// ###############################
 		// #       Initial EC Seed       #
 		// ###############################
+		vector<int> mapped_vertices_in_g2 (g2_size, 0); // default is 0
 		int mapped_edges_seed = 0;
 		for(int i = 0; i < g1_size; ++i)
 		{
 			int u = mapping_seed[i];
+			mapped_vertices_in_g2[u] = 1; // if aligned, assign to 1
 			for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
 			{
 				int j = g1_neighbor_sequence[i][j_index];
@@ -756,6 +779,23 @@ int main(int argc, char* argv[])
 		// #       Initial S3 Seed       #
 		// ###############################
 		mapped_edges_seed /= 2; // ! each mapped edges is counted twice
+
+		// Compute the number of edges in the induced G2
+		double induced_g2_num_of_edges = 0.0;
+		for(int u = 0; u < g2_size; ++u)
+		{
+			if(mapped_vertices_in_g2[u]) // if u is mapped
+			{
+				for(int v_index = 0; v_index < g2_degree_sequence[u]; ++v_index)
+				{
+					int v = g2_neighbor_sequence[u][v_index];
+					if(mapped_vertices_in_g2[v]) induced_g2_num_of_edges += 1.0;
+				}
+			}
+		}
+
+		induced_g2_num_of_edges /= 2; // each edge is counted twice
+
 		double ini_s3_seed = 0.0;
 		if(g1_size == g2_size)
 		{
@@ -765,7 +805,10 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			cout<<"The code for computing S3 on networks with different sizes is not finished yet\n";
+
+			double denominator = (double) g1_num_of_edges + (double) induced_g2_num_of_edges - (double) mapped_edges_seed;
+			ini_s3_seed = (double) mapped_edges_seed / denominator;
+			cout<<"Initial S3 using seed_version: "<<ini_s3_seed<<endl;
 		}
 
 	}
