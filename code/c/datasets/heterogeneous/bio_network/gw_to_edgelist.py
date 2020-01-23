@@ -25,7 +25,7 @@ for network in networks:
         # extract two vertices
         v1 = line.split(' ')[0]
         v2 = line.split(' ')[1]
-        out_file_obj.write(v1 + ' ' + v2 + '\n') # write to the .edges file
+    out_file_obj.write(v1 + ' ' + v2 + '\n') # write to the .edges file
 
     # close the file object
     in_file_obj.close()
@@ -38,7 +38,7 @@ for network in networks:
 for network in networks:
     in_network_name = "edgelist/" + network + "_raw.edges"
     out_network_name = "edgelist/" + network + ".edges"
-    g1 = nx.read_edgelist(in_network_name)
+    g1 = nx.readedgelist(in_network_name)
 
     # Extract LCC
     largest_cc_1 = max(nx.connected_components(g1), key=len)
