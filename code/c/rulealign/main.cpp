@@ -679,7 +679,7 @@ int main(int argc, char* argv[])
 		{
 			double denominator = (double) g1_num_of_edges + (double) induced_g2_num_of_edges - (double) mapped_edges_naive;
 			ini_s3_naive = (double) mapped_edges_naive / denominator;
-			cout<<"Initial S3 using seed_version: "<<ini_s3_naive<<endl;
+			cout<<"Initial S3 using naive_version: "<<ini_s3_naive<<endl;
 		}
 	}
 	else
