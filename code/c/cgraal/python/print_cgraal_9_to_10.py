@@ -3,8 +3,6 @@ import os
 
 real_network_name = ["erdos", "retweet_2"]
 
-p_real = ["0", "0.01", "0.03", "0.05", "0.07", "0.09", "0.11", "0.13", "0.15", "0.17", "0.19", "0.21", "0.23", "0.25"]
-
 garbage_location = "/garbage"
 
 sim_name = "sim.txt"
