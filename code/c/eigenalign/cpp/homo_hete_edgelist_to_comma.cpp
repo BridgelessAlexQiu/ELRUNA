@@ -32,10 +32,10 @@ int main(int argc, char* argv[])
 
         cout<<network_type<<"/"<<network_label<<" network:"<<endl;
 
-        string g1_network_file_name = "../datasets/" + network_type +"/" + network_label + "/" + network_label + "_g1.edges"; // name of the first network
-		string g2_network_file_name = "../datasets/" + network_type +"/" + network_label + "/" + network_label + "_g2.edges";  // name of the second network
-        string g1_comma_file_name = "datasets/" + network_type + "/" + network_label + "/" + network_label + "_g1.txt";
-        string g2_comma_file_name = "datasets/" + network_type + "/" + network_label + "/" + network_label + "_g2.txt";
+        string g1_network_file_name = "../../datasets/" + network_type +"/" + network_label + "/" + network_label + "_g1.edges"; // name of the first network
+		string g2_network_file_name = "../../datasets/" + network_type +"/" + network_label + "/" + network_label + "_g2.edges";  // name of the second network
+        string g1_comma_file_name = "../datasets/" + network_type + "/" + network_label + "/" + network_label + "_g1.txt";
+        string g2_comma_file_name = "../datasets/" + network_type + "/" + network_label + "/" + network_label + "_g2.txt";
 
         // ########################################################################################
         // #                                   Construct G1 Begin                                 #
@@ -316,10 +316,10 @@ int main(int argc, char* argv[])
 
         cout<<network_type<<"/"<<network_label<<" network:"<<endl;
 
-        string g1_network_file_name = "../datasets/" + network_type +"/" + network_label + "/" + g1_name + ".edges"; // name of the first network
-		string g2_network_file_name = "../datasets/" + network_type +"/" + network_label + "/" + g2_name + ".edges";  // name of the second network
-        string g1_comma_file_name = "datasets/" + network_type + "/" + network_label + "/" + g1_name + ".txt";
-        string g2_comma_file_name = "datasets/" + network_type + "/" + network_label + "/" + g2_name + ".txt";
+        string g1_network_file_name = "../../datasets/" + network_type +"/" + network_label + "/" + g1_name + ".edges"; // name of the first network
+		string g2_network_file_name = "../../datasets/" + network_type +"/" + network_label + "/" + g2_name + ".edges";  // name of the second network
+        string g1_comma_file_name = "../datasets/" + network_type + "/" + network_label + "/" + g1_name + ".txt";
+        string g2_comma_file_name = "../datasets/" + network_type + "/" + network_label + "/" + g2_name + ".txt";
 
         // ########################################################################################
         // #                                   Construct G1 Begin                                 #
