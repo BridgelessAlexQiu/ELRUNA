@@ -469,71 +469,71 @@ int main(int argc, char* argv[])
         g2_num_of_edges /= 2; // each edges is counted twice
         g2_network_file.close();
 
-        // ######################################
-        // #       Read in the output file      #
-        // ######################################
-        ifstream output_file(output_file_name); //The file object
+        // // ######################################
+        // // #       Read in the output file      #
+        // // ######################################
+        // ifstream output_file(output_file_name); //The file object
 
-        if(output_file.fail())// If we cannot locate the file
-        {
-            cout<<"The EC is 0.0 (crashed)"<<endl;
-        }
-        else
-        {
-            // Construct mappings
-            int mapping[g1_size];
+        // if(output_file.fail())// If we cannot locate the file
+        // {
+        //     cout<<"The EC is 0.0 (crashed)"<<endl;
+        // }
+        // else
+        // {
+        //     // Construct mappings
+        //     int mapping[g1_size];
 
-            string line;
-            while (getline(output_file, line))  //reading network file
-            {
-                istringstream linestream(line);
-                string node1, node2;
+        //     string line;
+        //     while (getline(output_file, line))  //reading network file
+        //     {
+        //         istringstream linestream(line);
+        //         string node1, node2;
                 
-                //read the first node in a row
-                getline(linestream, node1, '\t'); //first node
-                if(node1.length() == 0) continue;
-                int i1 = stoi(node1);
+        //         //read the first node in a row
+        //         getline(linestream, node1, '\t'); //first node
+        //         if(node1.length() == 0) continue;
+        //         int i1 = stoi(node1);
 
-                getline(linestream, node2, '\t'); //second node
-                int i2 = stoi(node2);
+        //         getline(linestream, node2, '\t'); //second node
+        //         int i2 = stoi(node2);
 
-                mapping[i1] = i2;
+        //         mapping[i1] = i2;
                 
-            }
-            output_file.close();
+        //     }
+        //     output_file.close();
             
-            // ###########################
-            // #       Initial EC        #
-            // ###########################
-            int mapped_edges= 0;
-            for(int i = 0; i < g1_size; ++i)
-            {
-                int u = mapping[i];
-                if(u != -1)
-                {
-                    for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
-                    {
-                        int j = g1_neighbor_sequence[i][j_index];
-                        int v = mapping[j];
-                        if(v != -1)
-                        {
-                            for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[u]; ++u_nei_index)
-                            {
-                                int u_nei = g2_neighbor_sequence[u][u_nei_index];
-                                if(v == u_nei)
-                                {
-                                    mapped_edges += 1;
-                                    break;
-                                }
-                            }
-                        }
+        //     // ###########################
+        //     // #       Initial EC        #
+        //     // ###########################
+        //     int mapped_edges= 0;
+        //     for(int i = 0; i < g1_size; ++i)
+        //     {
+        //         int u = mapping[i];
+        //         if(u != -1)
+        //         {
+        //             for(int j_index = 0; j_index < g1_degree_sequence[i]; ++j_index)
+        //             {
+        //                 int j = g1_neighbor_sequence[i][j_index];
+        //                 int v = mapping[j];
+        //                 if(v != -1)
+        //                 {
+        //                     for(int u_nei_index = 0; u_nei_index < g2_degree_sequence[u]; ++u_nei_index)
+        //                     {
+        //                         int u_nei = g2_neighbor_sequence[u][u_nei_index];
+        //                         if(v == u_nei)
+        //                         {
+        //                             mapped_edges += 1;
+        //                             break;
+        //                         }
+        //                     }
+        //                 }
                         
-                    }
-                }
-            }
-            double ini_ec = (double) mapped_edges / (double) (2 * g1_num_of_edges); // ! each mapped edges is counted twice
-            cout<<"EC is: "<<ini_ec<<endl;
-        } // end of else
+        //             }
+        //         }
+        //     }
+        //     double ini_ec = (double) mapped_edges / (double) (2 * g1_num_of_edges); // ! each mapped edges is counted twice
+        //     cout<<"EC is: "<<ini_ec<<endl;
+        // } // end of else
 
         // ###########################
         // #           Free          #
