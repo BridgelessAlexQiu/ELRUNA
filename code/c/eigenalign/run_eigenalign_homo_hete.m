@@ -55,8 +55,9 @@ end
 % ----------------------------- %
 for i = 1 : length(hete_network_name)
     nn = hete_network_name{i};
-    g1_name = split(nn, "_")(1);
-    g2_name = split(nn, "_")(2);
+    arr = split(nn, "_");
+    g1_name = arr(1);
+    g2_name = arr(2);
 
     % ---------- G1 ------------ %
     g1_file_location = strcat(hete_network_file_location, "/", nn, "/", g1_name, ".txt");
