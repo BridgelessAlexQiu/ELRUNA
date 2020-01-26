@@ -482,6 +482,10 @@ int main(int argc, char* argv[])
         {
             // Construct mappings
             int mapping[g1_size];
+            for(int i = 0; i < g1_size; ++i)
+            {
+                mapping[i] = -1;
+            }
 
             string line;
             while (getline(output_file, line))  //reading network file
