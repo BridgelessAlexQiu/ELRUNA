@@ -28,6 +28,11 @@ int main(int argc, char* argv[])
     vector<string> homo_network_name = {"dblp", "digg", "elegan", "facebook"};
     vector<string> hete_network_name = {"ecoli_yeast", "flickr_lastfm", "flickr_myspace", "offline_online", "syne_yeast"};
 
+    for(int i = 0; i < homo_network_name.size(); ++i)
+    {
+        cout<<homo_network_name[i]<<endl;
+    }
+
     // ################################ 
     // #          Homogeneous         #
     // ################################ 
