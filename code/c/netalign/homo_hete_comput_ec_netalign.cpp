@@ -469,39 +469,39 @@ int main(int argc, char* argv[])
         g2_num_of_edges /= 2; // each edges is counted twice
         g2_network_file.close();
 
-        // // ######################################
-        // // #       Read in the output file      #
-        // // ######################################
-        // ifstream output_file(output_file_name); //The file object
+        // ######################################
+        // #       Read in the output file      #
+        // ######################################
+        ifstream output_file(output_file_name); //The file object
 
-        // if(output_file.fail())// If we cannot locate the file
-        // {
-        //     cout<<"The EC is 0.0 (crashed)"<<endl;
-        // }
-        // else
-        // {
-        //     // Construct mappings
-        //     int mapping[g1_size];
+        if(output_file.fail())// If we cannot locate the file
+        {
+            cout<<"The EC is 0.0 (crashed)"<<endl;
+        }
+        else
+        {
+            // Construct mappings
+            int mapping[g1_size];
 
-        //     string line;
-        //     while (getline(output_file, line))  //reading network file
-        //     {
-        //         istringstream linestream(line);
-        //         string node1, node2;
+            string line;
+            while (getline(output_file, line))  //reading network file
+            {
+                istringstream linestream(line);
+                string node1, node2;
                 
-        //         //read the first node in a row
-        //         getline(linestream, node1, '\t'); //first node
-        //         if(node1.length() == 0) continue;
-        //         int i1 = stoi(node1);
+                //read the first node in a row
+                getline(linestream, node1, '\t'); //first node
+                if(node1.length() == 0) continue;
+                int i1 = stoi(node1);
 
-        //         getline(linestream, node2, '\t'); //second node
-        //         int i2 = stoi(node2);
+                getline(linestream, node2, '\t'); //second node
+                int i2 = stoi(node2);
 
-        //         mapping[i1] = i2;
+                mapping[i1] = i2;
                 
-        //     }
-        //     output_file.close();
-            
+            }
+            output_file.close();
+        }
         //     // ###########################
         //     // #       Initial EC        #
         //     // ###########################
