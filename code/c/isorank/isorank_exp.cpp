@@ -22,7 +22,7 @@ bool float_equal(double d1, double d2);
 // arg list: g1.edges g2.edges max_iter [flag]
 int main(int argc, char* argv[])
 {
-	vector<string> vector_p = {"0", "0.01", "0.03", "0.05", "0.07", "0.09", "0.11", "0.13", "0.15", "0.17", "0.19", "0.21", "0.23", "0.25"};
+	vector<string> vector_p = {"0.25"};
 	
 	string network_type; // real_network vs random_network
 	string network_label;
@@ -53,35 +53,15 @@ int main(int argc, char* argv[])
 		string g2_network_file_name; // name of the second network
 
 		// the file types of random network and newman real networks are edgeslist
-		if(network_label != "newman" && network_type != "random_network")
+		if(network_type == "real_network")
 		{
 			g1_network_file_name = "../datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_g1.edges";
 			g2_network_file_name = "../datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_" + p + "_g2.edges";
 		}
 		else
 		{
-			g1_network_file_name = "../datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_g1.edgelist";
-			g2_network_file_name = "../datasets/self_under_noise/" + network_type + "/" + network_label + "/" + network_label + "_" + p + "_g2.edgelist";
-			if(network_type == "random_network" && unique_i == 12)
-			{
-				cout<<"EC: \n";
-				cout<<"[";
-				for(int i = 0; i < ec_result_vector.size(); ++i)
-				{
-					cout<<ec_result_vector[i]<<", ";
-				}
-				cout<<"]\n";
-
-				cout<<"S3: \n";
-				cout<<"[";
-				for(int i = 0; i < s3_result_vector.size(); ++i)
-				{
-					cout<<s3_result_vector[i]<<", ";
-				}
-				cout<<"]\n";
-
-				return 0; // p = 0.21 for random network
-			} 
+			g1_network_file_name = "../datasets/" + network_type + "/" + network_label + "/" + network_label + "_g1.edges";
+			g2_network_file_name = "../datasets/" + network_type + "/" + network_label + "/" + network_label + "_g2.edges";
 		}
 		
 		// ########################################################################################
