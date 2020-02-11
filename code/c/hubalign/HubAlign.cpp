@@ -12,8 +12,8 @@ exception er;
 
 int main(int argc, char* argv[])
 {
-    double lambda;  //a is alpha that controlls the factor of edgeweights
-    double alpha;
+    double lambda = 0.2;  //a is alpha that controlls the factor of edgeweights
+    double alpha = 0.7;
     int degree = 10; //controlls the step of making the skeleton
 
     vector<string> vector_p = {"0.25"};
