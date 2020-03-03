@@ -9,11 +9,9 @@
     - 1: (default) seed alignment
  
 **File structure**
+![File structure](file_structure.png)
 
-**datasets**: consists of all the networks used in our experiments
-
-
-All network files can be found under the directory `datasets`. Based on the nature of networks (random vs real world), they are stored in separate folders `random_network` and `real_network`, respectively. 
+All network files can be found under the directory `datasets`.  
 
 **G1:** Given a network G1, its name has the format: *name_g1.edges*, for example: *erdos_g1.edges*.
 
@@ -22,17 +20,17 @@ All network files can be found under the directory `datasets`. Based on the natu
 **Run the alignment algorithm:**
 ```
 cd code/c
-g++ -std=c++11 -O3 main.cpp -o main
-./main name_of_the_first_network name_of_the_second_network diameter [0/1]
+g++ -std=c++11 -O3 elruna.cpp -o elruna
+./elruna name_of_the_first_network name_of_the_second_network diameter [0/1]
 ```
 
 **Example (using the seed alignment method):**
 ```
-./main datasets/real_network/erdos/erdos_g1.edges datasets/real_network/erdos/erdos_0.25_g2.edges 14
+./elruna ../datasets/real_network/erdos/erdos_g1.edges datasets/real_network/erdos/erdos_0.25_g2.edges 14
 ```
 
 
 **Example (using the naive alignment method):**
 ```
-./main datasets/real_network/econ/econ_g1.edges datasets/real_network/econ/econ_0.25_g2.edges 8 0
+./elruna ../datasets/real_network/econ/econ_g1.edges datasets/real_network/econ/econ_0.25_g2.edges 8 0
 ```
