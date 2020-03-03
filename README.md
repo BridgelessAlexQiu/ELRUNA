@@ -1,14 +1,18 @@
-**ELRUNA** : **EL**imination **Ru**le-based **N**etwork **A**lignment
+# **ELRUNA** : **EL**imination **RU**le-based **N**etwork **A**lignment
 
 **Parameters:**
 1. *.edges* file of G1
-2. *.edges* file of G2 (**please make sure $|V_1| \leq |V_2|$**)
-3. larger diameter
+2. *.edges* file of G2 (**please make sure $|V_1| <= |V_2|$**)
+3. number  of iterations (recommend to set to the larger diameter of the networks)
 4. [optional] (0/1) flag indicates which alignment method to use
-    - 0: (default) seed alignment
-    - 1: naive alignment
+    - 0:  naive alignment
+    - 1: (default) seed alignment
  
-**Naming convention of network files:**
+**File structure**
+
+**datasets**: consists of all the networks used in our experiments
+
+
 All network files can be found under the directory `datasets`. Based on the nature of networks (random vs real world), they are stored in separate folders `random_network` and `real_network`, respectively. 
 
 **G1:** Given a network G1, its name has the format: *name_g1.edges*, for example: *erdos_g1.edges*.
