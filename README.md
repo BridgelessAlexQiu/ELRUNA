@@ -21,7 +21,7 @@ All network files can be found under the directory `datasets`.
 ```
 cd code/c
 g++ -std=c++11 -O3 elruna.cpp -o elruna
-./elruna name_of_the_first_network name_of_the_second_network diameter [0/1]
+./elruna name_of_the_first_network name_of_the_second_network num_of_iter [0/1]
 ```
 
 **Example (using the seed alignment method):**
