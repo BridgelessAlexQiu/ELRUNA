@@ -1,4 +1,4 @@
-**This is only the code for network alignment algorithm (local search is not included)**
+
 
 **Parameters:**
 1. *.edges* file of G1
