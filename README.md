@@ -19,18 +19,18 @@ All network files can be found under the directory `datasets`.
 
 **Run the alignment algorithm:**
 ```
-cd code/c
+cd code/c/elruna
 g++ -std=c++11 -O3 elruna.cpp -o elruna
 ./elruna name_of_the_first_network name_of_the_second_network num_of_iter [0/1]
-```
-
-**Example (using the seed alignment method):**
-```
-./elruna ../datasets/real_network/erdos/erdos_g1.edges datasets/real_network/erdos/erdos_0.25_g2.edges 14
 ```
 
 
 **Example (using the naive alignment method):**
 ```
-./elruna ../datasets/real_network/econ/econ_g1.edges datasets/real_network/econ/econ_0.25_g2.edges 8 0
+./elruna ../datasets/self_under_noise/real_network/newman/newman_g1.edgelist ../datasets/self_under_noise/real_network/newman/newman_0.25_g2.edgelist 18 0 
+```
+
+**Example (using the seed alignment method):**
+```
+./elruna ../datasets/self_under_noise/real_network/erdos/erdos_g1.edges ../datasets/self_under_noise/real_network/erdos/erdos_0.25_g2.edges 14 1
 ```
