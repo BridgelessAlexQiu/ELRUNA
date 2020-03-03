@@ -1,4 +1,4 @@
-
+**ELRUNA** : **EL**imination **Ru**le-based **N**etwork **A**lignment
 
 **Parameters:**
 1. *.edges* file of G1
